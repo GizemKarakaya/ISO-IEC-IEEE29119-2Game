@@ -1,0 +1,158 @@
+{
+  "OT1": [
+    {
+      "q": "OT1’in temel amacı nedir?",
+      "options": [
+        "Organizasyon seviyesinde test yaklaşımını tanımlamak",
+        "Yalnızca test execution yapmak",
+        "Sadece incident kaydetmek"
+      ],
+      "correct": 0
+    },
+    {
+      "q": "OT1 hangi seviyede etki eder?",
+      "options": [
+        "Sadece tek bir test case seviyesinde",
+        "Organizasyonel seviyede",
+        "Sadece deployment sonrasında"
+      ],
+      "correct": 1
+    }
+  ],
+  "OT3": [
+    {
+      "q": "OT3 neyi temsil eder?",
+      "options": [
+        "Organizasyonel test spesifikasyonunu güncellemeyi",
+        "Yalnızca test ortamı kurmayı",
+        "Plan dışı deployment yapmayı"
+      ],
+      "correct": 0
+    },
+    {
+      "q": "OT3 ne zaman kritik olur?",
+      "options": [
+        "Hiçbir zaman",
+        "Tekrarlayan geri bildirim ve incident birikiminde",
+        "Sadece kod derlenmediğinde"
+      ],
+      "correct": 1
+    }
+  ],
+  "TMP1": [
+    {
+      "q": "TMP1’in odağı nedir?",
+      "options": ["Planlama ve strateji", "Sadece kod yazma", "Sadece bug kapatma"],
+      "correct": 0
+    },
+    {
+      "q": "TMP1 çıktısı en çok hangi süreci etkiler?",
+      "options": ["Yalnızca OT1’i", "Yalnızca release notlarını", "Monitoring ve dinamik test akışını"],
+      "correct": 2
+    }
+  ],
+  "TMP2": [
+    {
+      "q": "TMP2’nin kritik görevi hangisi?",
+      "options": [
+        "Planlanan ve gerçekleşen ilerlemeyi izlemek ve kontrol etmek",
+        "Yalnızca test case yazmak",
+        "Sadece rapor basmak"
+      ],
+      "correct": 0
+    },
+    {
+      "q": "EV < PV olduğunda TMP2 açısından ne gerekir?",
+      "options": [
+        "Oyunu durdurmak",
+        "Düzeltici aksiyon ve önceliklendirme",
+        "Tüm masaları cooldown yapmak"
+      ],
+      "correct": 1
+    }
+  ],
+  "TMP3": [
+    {
+      "q": "TMP3 sürecinde ne beklenir?",
+      "options": [
+        "Test kapanış aktiviteleri ve sonuçların tamamlanması",
+        "Yeni test stratejisi başlatmak",
+        "Ortam kurulumu yapmak"
+      ],
+      "correct": 0
+    },
+    {
+      "q": "TMP3 hangi aşamaya daha yakındır?",
+      "options": ["Sürecin kapanışına", "İlk planlamaya", "Organizasyonel kuralların oluşturulmasına"],
+      "correct": 0
+    }
+  ],
+  "DP1": [
+    {
+      "q": "DP1, DP3’ü neden etkiler?",
+      "options": [
+        "Design/implementation çıktıları execution’ı besler",
+        "Hiçbir bağlantı yoktur",
+        "Execution, design’dan önce gelir"
+      ],
+      "correct": 0
+    },
+    {
+      "q": "DP1’deki gecikme en çok neye yol açar?",
+      "options": ["PV’nin düşmesine", "Organizasyonel layer’ın kapanmasına", "Execution darboğazına"],
+      "correct": 2
+    }
+  ],
+  "DP2": [
+    {
+      "q": "DP2’nin ana katkısı nedir?",
+      "options": [
+        "Test environment ve data yönetimi sağlamak",
+        "Sadece rapor yazmak",
+        "Sadece plan barını artırmak"
+      ],
+      "correct": 0
+    },
+    {
+      "q": "DP2 stabil değilse DP3 neden etkilenir?",
+      "options": [
+        "TMP3 otomatik kapanır",
+        "Execution için gerekli ortam/veri azalır",
+        "OT1 yok olur"
+      ],
+      "correct": 1
+    }
+  ],
+  "DP3": [
+    {
+      "q": "DP3 hangi süreci temsil eder?",
+      "options": ["Test execution", "Organizasyon güncelleme", "Kapanış yönetimi"],
+      "correct": 0
+    },
+    {
+      "q": "DP3 çıktıları en çok nereye akar?",
+      "options": ["OT1’e doğrudan", "TMP1’e sadece tek yönlü", "DP4 incident reporting tarafına"],
+      "correct": 2
+    }
+  ],
+  "DP4": [
+    {
+      "q": "DP4’den TMP2’ye giden geri bildirim neyi sağlar?",
+      "options": [
+        "Monitoring ve corrective control için bilgi sağlar",
+        "Akışı tamamen yok sayar",
+        "PV barını durdurur"
+      ],
+      "correct": 0
+    },
+    {
+      "q": "DP4 artışı uzun vadede OT3’ü neden etkileyebilir?",
+      "options": [
+        "Hiçbir etkisi olmaz",
+        "Sadece oyuncu skorunu sıfırlar",
+        "Tekrarlayan incident’lar organizasyonel güncelleme ihtiyacı doğurur"
+      ],
+      "correct": 2
+    }
+  ]
+}
