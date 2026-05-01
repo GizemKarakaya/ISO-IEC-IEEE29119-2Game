@@ -1,16 +1,41 @@
 const GAME_WIDTH = 1280;
 const GAME_HEIGHT = 720;
 
+const COLORS = {
+  bg: 0x07111f,
+  floor: 0x243447,
+  floorAlt: 0x2b4057,
+  grid: 0x49627a,
+  panel: 0x111827,
+  panelDark: 0x060b14,
+  ink: 0xf8fafc,
+  muted: 0x94a3b8,
+  cyan: 0x38bdf8,
+  blue: 0x60a5fa,
+  green: 0x22c55e,
+  red: 0xef4444,
+  amber: 0xf59e0b,
+  purple: 0xa78bfa
+};
+
+const FONT = '"Courier New", monospace';
+const OFFICE = { x: 24, y: 78, width: 1232, height: 612 };
+const LAYERS = [
+  { title: "Organizational Layer", y: 98, h: 134, wall: 0x2f4a3f, floor: 0x8b6f47, floorAlt: 0x7b623f, trim: 0x38bdf8 },
+  { title: "Test Management Layer", y: 292, h: 144, wall: 0x4a405d, floor: 0x9a7650, floorAlt: 0x856645, trim: 0xa78bfa },
+  { title: "Dynamic Test Processes Layer", y: 504, h: 156, wall: 0x3f563a, floor: 0x94734e, floorAlt: 0x806443, trim: 0x22c55e }
+];
+
 const TABLES = [
-  { id: "OT1", label: "OT1", fullName: "Develop Organizational Test Specification", layer: "organizational", x: 170, y: 120, baseRate: 1.0 },
-  { id: "OT3", label: "OT3", fullName: "Update Organizational Test Specification", layer: "organizational", x: 400, y: 120, baseRate: 1.0 },
-  { id: "TMP1", label: "TMP1", fullName: "Test Strategy and Planning", layer: "management", x: 190, y: 330, baseRate: 1.0 },
-  { id: "TMP2", label: "TMP2", fullName: "Test Monitoring and Control", layer: "management", x: 430, y: 330, baseRate: 1.1 },
-  { id: "TMP3", label: "TMP3", fullName: "Test Completion", layer: "management", x: 670, y: 330, baseRate: 1.0 },
-  { id: "DP1", label: "DP1", fullName: "Test Design and Implementation", layer: "dynamic", x: 220, y: 560, baseRate: 1.0 },
-  { id: "DP2", label: "DP2", fullName: "Test Environment and Data Management", layer: "dynamic", x: 460, y: 560, baseRate: 1.0 },
-  { id: "DP3", label: "DP3", fullName: "Test Execution", layer: "dynamic", x: 700, y: 560, baseRate: 1.0 },
-  { id: "DP4", label: "DP4", fullName: "Test Incident Reporting", layer: "dynamic", x: 940, y: 560, baseRate: 1.0 }
+  { id: "OT1", label: "OT1", fullName: "Develop Organizational Test Specification", layer: "organizational", x: 200, y: 164, baseRate: 1.0 },
+  { id: "OT3", label: "OT3", fullName: "Update Organizational Test Specification", layer: "organizational", x: 480, y: 164, baseRate: 1.0 },
+  { id: "TMP1", label: "TMP1", fullName: "Test Strategy and Planning", layer: "management", x: 210, y: 364, baseRate: 1.0 },
+  { id: "TMP2", label: "TMP2", fullName: "Test Monitoring and Control", layer: "management", x: 500, y: 364, baseRate: 1.1 },
+  { id: "TMP3", label: "TMP3", fullName: "Test Completion", layer: "management", x: 790, y: 364, baseRate: 1.0 },
+  { id: "DP1", label: "DP1", fullName: "Test Design and Implementation", layer: "dynamic", x: 180, y: 590, baseRate: 1.0 },
+  { id: "DP2", label: "DP2", fullName: "Test Environment and Data Management", layer: "dynamic", x: 430, y: 590, baseRate: 1.0 },
+  { id: "DP3", label: "DP3", fullName: "Test Execution", layer: "dynamic", x: 680, y: 590, baseRate: 1.0 },
+  { id: "DP4", label: "DP4", fullName: "Test Incident Reporting", layer: "dynamic", x: 930, y: 590, baseRate: 1.0 }
 ];
 
 const FLOWS = [
@@ -64,6 +89,7 @@ class OfficeScene extends Phaser.Scene {
     this.difficulty = "medium";
     this.currentQuiz = null;
     this.isTutorialOpen = false;
+    this.isMenuOpen = false;
     this.score = 0;
     this.questionBank = DEFAULT_QUESTIONS;
     this.gameDurationMs = 180000;
@@ -73,6 +99,9 @@ class OfficeScene extends Phaser.Scene {
     this.gameOver = false;
     this.gameResultText = "";
     this.lastQuestionByTable = {};
+    this.walkFrameMs = 0;
+    this.walkFrame = 0;
+    this.quizAnswered = false;
   }
 
   preload() {
@@ -84,7 +113,9 @@ class OfficeScene extends Phaser.Scene {
     if (loadedQuestions) {
       this.questionBank = loadedQuestions;
     }
-    this.cameras.main.setBackgroundColor("#0b1020");
+    this.cameras.main.setBackgroundColor("#07111f");
+    this.createPixelTextures();
+    this.drawPixelOfficeFloor();
     this.drawLayers();
     this.createTables();
     this.createFlows();
@@ -100,17 +131,174 @@ class OfficeScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-ENTER", () => this.startGame());
     this.input.keyboard.on("keydown-SPACE", () => this.startGame());
     this.input.keyboard.on("keydown-ESC", () => this.handleEscAction());
+    this.input.keyboard.on("keydown-W", () => this.closeAnsweredQuiz());
+    this.input.keyboard.on("keydown-A", () => this.closeAnsweredQuiz());
+    this.input.keyboard.on("keydown-S", () => this.closeAnsweredQuiz());
+    this.input.keyboard.on("keydown-D", () => this.closeAnsweredQuiz());
   }
 
   drawLayers() {
-    const layerStyle = { fontSize: "20px", color: "#93c5fd", fontStyle: "bold" };
-    this.add.text(40, 45, "Organizational Layer", layerStyle);
-    this.add.text(40, 255, "Test Management Layer", layerStyle);
-    this.add.text(40, 485, "Dynamic Test Processes Layer", layerStyle);
+    const layerStyle = { fontFamily: FONT, fontSize: "15px", color: "#f8fafc", fontStyle: "bold" };
+    LAYERS.forEach((layer) => {
+      this.add.text(42, layer.y - 18, layer.title, layerStyle);
+      const plate = this.add.rectangle(44, layer.y + 10, 12, 12, layer.trim).setOrigin(0, 0);
+      plate.setStrokeStyle(2, 0x020617);
+    });
+  }
 
-    const line = this.add.graphics({ lineStyle: { width: 2, color: 0x334155 } });
-    line.lineBetween(30, 210, GAME_WIDTH - 30, 210);
-    line.lineBetween(30, 440, GAME_WIDTH - 30, 440);
+  createPixelTextures() {
+    if (!this.textures.exists("player-idle")) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(0x312e81);
+      g.fillRect(6, 0, 20, 7);
+      g.fillStyle(0x4c1d95);
+      g.fillRect(4, 6, 24, 14);
+      g.fillStyle(0xf2c6a0);
+      g.fillRect(9, 7, 14, 11);
+      g.fillStyle(0xde3f8f);
+      g.fillRect(6, 19, 20, 9);
+      g.fillStyle(0xf9a8d4);
+      g.fillRect(8, 19, 16, 3);
+      g.fillStyle(0x111827);
+      g.fillRect(11, 9, 3, 3);
+      g.fillRect(18, 9, 3, 3);
+      g.fillStyle(0x7c2d12);
+      g.fillRect(5, 14, 4, 12);
+      g.fillRect(23, 14, 4, 12);
+      g.fillStyle(0x1f2937);
+      g.fillRect(9, 29, 5, 3);
+      g.fillRect(18, 29, 5, 3);
+      g.generateTexture("player-idle", 32, 32);
+      g.destroy();
+    }
+    if (!this.textures.exists("player-walk-1")) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(0x312e81);
+      g.fillRect(6, 0, 20, 7);
+      g.fillStyle(0x4c1d95);
+      g.fillRect(4, 6, 24, 14);
+      g.fillStyle(0xf2c6a0);
+      g.fillRect(9, 7, 14, 11);
+      g.fillStyle(0xde3f8f);
+      g.fillRect(6, 19, 20, 9);
+      g.fillStyle(0xf9a8d4);
+      g.fillRect(8, 19, 16, 3);
+      g.fillStyle(0x111827);
+      g.fillRect(11, 9, 3, 3);
+      g.fillRect(18, 9, 3, 3);
+      g.fillStyle(0x7c2d12);
+      g.fillRect(3, 15, 5, 12);
+      g.fillRect(24, 13, 5, 12);
+      g.fillStyle(0x1f2937);
+      g.fillRect(6, 29, 6, 3);
+      g.fillRect(20, 29, 6, 3);
+      g.generateTexture("player-walk-1", 32, 32);
+      g.destroy();
+    }
+    if (!this.textures.exists("player-walk-2")) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(0x312e81);
+      g.fillRect(6, 0, 20, 7);
+      g.fillStyle(0x4c1d95);
+      g.fillRect(4, 6, 24, 14);
+      g.fillStyle(0xf2c6a0);
+      g.fillRect(9, 7, 14, 11);
+      g.fillStyle(0xde3f8f);
+      g.fillRect(6, 19, 20, 9);
+      g.fillStyle(0xf9a8d4);
+      g.fillRect(8, 19, 16, 3);
+      g.fillStyle(0x111827);
+      g.fillRect(11, 9, 3, 3);
+      g.fillRect(18, 9, 3, 3);
+      g.fillStyle(0x7c2d12);
+      g.fillRect(4, 13, 5, 12);
+      g.fillRect(25, 15, 5, 12);
+      g.fillStyle(0x1f2937);
+      g.fillRect(10, 29, 6, 3);
+      g.fillRect(16, 29, 6, 3);
+      g.generateTexture("player-walk-2", 32, 32);
+      g.destroy();
+    }
+  }
+
+  drawPixelOfficeFloor() {
+    const floor = this.add.graphics().setDepth(-20);
+    floor.fillStyle(COLORS.bg);
+    floor.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    floor.fillStyle(0x111827, 1);
+    floor.fillRect(0, 0, GAME_WIDTH, 62);
+    floor.fillStyle(0x020617, 1);
+    floor.fillRect(0, 62, GAME_WIDTH, 5);
+
+    floor.fillStyle(0x8b6f47, 1);
+    floor.fillRect(OFFICE.x - 4, OFFICE.y - 4, OFFICE.width + 8, OFFICE.height + 8);
+
+    const plankH = 18;
+    for (let y = OFFICE.y; y < OFFICE.y + OFFICE.height; y += plankH) {
+      const row = Math.floor((y - OFFICE.y) / plankH);
+      const offset = (row % 2) * 42;
+      floor.fillStyle(row % 2 === 0 ? 0x8b6f47 : 0x806443, 1);
+      floor.fillRect(OFFICE.x, y, OFFICE.width, plankH - 2);
+      floor.lineStyle(1, 0x4a3524, 0.28);
+      floor.lineBetween(OFFICE.x, y, OFFICE.x + OFFICE.width, y);
+      for (let x = OFFICE.x - offset; x < OFFICE.x + OFFICE.width; x += 84) {
+        floor.lineBetween(x, y, x, y + plankH - 2);
+      }
+    }
+
+    LAYERS.forEach((layer) => {
+      floor.fillStyle(layer.trim, 0.08);
+      floor.fillRect(OFFICE.x, layer.y - 12, OFFICE.width, layer.h + 12);
+      floor.fillStyle(layer.trim, 0.18);
+      floor.fillRect(OFFICE.x, layer.y - 3, OFFICE.width, 3);
+      floor.fillRect(OFFICE.x, layer.y + layer.h - 3, OFFICE.width, 3);
+    });
+
+    this.drawOfficeProps(floor);
+  }
+
+  drawOfficeProps(floor) {
+    floor.fillStyle(0x111827, 0.45);
+    floor.fillRect(1106, 330, 70, 48);
+    floor.fillStyle(0x475569, 1);
+    floor.fillRect(1110, 326, 62, 42);
+    floor.fillStyle(0x64748b, 1);
+    floor.fillRect(1115, 320, 52, 12);
+    floor.fillStyle(0xe2e8f0, 1);
+    floor.fillRect(1122, 307, 38, 22);
+    floor.fillStyle(0x0f172a, 1);
+    floor.fillRect(1120, 348, 42, 8);
+    floor.fillStyle(0x38bdf8, 1);
+    floor.fillRect(1122, 335, 12, 6);
+    floor.fillStyle(0x22c55e, 1);
+    floor.fillRect(1142, 336, 5, 5);
+    floor.fillStyle(0xef4444, 1);
+    floor.fillRect(1152, 336, 5, 5);
+    floor.fillStyle(0xf8fafc, 1);
+    floor.fillRect(1124, 358, 36, 14);
+
+    floor.fillStyle(0x1f2937, 1);
+    floor.fillRect(1136, 582, 34, 42);
+    floor.fillStyle(0x475569, 1);
+    floor.fillRect(1132, 574, 42, 10);
+    floor.fillStyle(0x0f172a, 1);
+    floor.fillRect(1142, 590, 22, 24);
+
+    this.drawPlant(floor, 1190, 126);
+    this.drawPlant(floor, 70, 620);
+    this.drawPlant(floor, 1084, 438);
+  }
+
+  drawPlant(graphics, x, y) {
+    graphics.fillStyle(0x7c2d12, 1);
+    graphics.fillRect(x - 12, y + 18, 24, 18);
+    graphics.fillStyle(0x14532d, 1);
+    graphics.fillRect(x - 5, y + 2, 10, 22);
+    graphics.fillStyle(0x22c55e, 1);
+    graphics.fillRect(x - 24, y - 8, 18, 14);
+    graphics.fillRect(x + 6, y - 12, 20, 16);
+    graphics.fillRect(x - 10, y - 22, 20, 18);
   }
 
   createTables() {
@@ -119,22 +307,79 @@ class OfficeScene extends Phaser.Scene {
         ...table,
         status: "normal",
         statusUntil: 0,
+        quizLocked: false,
         exclamation: null
       });
 
-      const g = this.add.rectangle(table.x, table.y, 180, 72, 0x1f2937).setStrokeStyle(2, 0x60a5fa);
-      const shortLabel = this.add.text(table.x, table.y - 14, table.label, {
-        fontSize: "18px",
+      const shadow = this.add.rectangle(table.x + 6, table.y + 10, 150, 60, 0x020617, 0.44);
+      const employee = this.add.graphics();
+      const shirt = table.x % 3 === 0 ? 0x0ea5e9 : table.x % 2 === 0 ? 0x22c55e : 0xf97316;
+      const hair = [0x3b2417, 0x111827, 0x92400e, 0x581c87][TABLES.indexOf(table) % 4];
+      employee.fillStyle(0x111827);
+      employee.fillRect(table.x - 18, table.y - 28, 36, 22);
+      employee.fillStyle(shirt);
+      employee.fillRect(table.x - 14, table.y - 39, 28, 24);
+      employee.fillStyle(0xf2c6a0);
+      employee.fillRect(table.x - 11, table.y - 60, 22, 20);
+      employee.fillStyle(hair);
+      if (TABLES.indexOf(table) % 3 === 0) {
+        employee.fillRect(table.x - 15, table.y - 66, 30, 12);
+        employee.fillRect(table.x - 16, table.y - 56, 6, 15);
+        employee.fillRect(table.x + 10, table.y - 56, 6, 15);
+      } else if (TABLES.indexOf(table) % 3 === 1) {
+        employee.fillRect(table.x - 13, table.y - 66, 26, 8);
+        employee.fillRect(table.x - 13, table.y - 58, 8, 7);
+      } else {
+        employee.fillRect(table.x - 11, table.y - 68, 22, 10);
+        employee.fillRect(table.x + 7, table.y - 58, 8, 10);
+      }
+      employee.fillStyle(0x111827);
+      employee.fillRect(table.x - 7, table.y - 53, 3, 3);
+      employee.fillRect(table.x + 5, table.y - 53, 3, 3);
+      employee.fillRect(table.x - 4, table.y - 45, 8, 2);
+      employee.fillStyle(0xf2c6a0);
+      employee.fillRect(table.x - 24, table.y - 30, 10, 6);
+      employee.fillRect(table.x + 14, table.y - 30, 10, 6);
+      const legs = this.add.graphics();
+      legs.fillStyle(0x111827);
+      legs.fillRect(table.x - 64, table.y + 22, 10, 20);
+      legs.fillRect(table.x + 54, table.y + 22, 10, 20);
+      const g = this.add.rectangle(table.x, table.y, 150, 58, 0x6b4423).setStrokeStyle(4, 0x2b170c);
+      const lip = this.add.rectangle(table.x, table.y - 23, 134, 10, 0x8b5a2b);
+      const monitor = this.add.rectangle(table.x + 45, table.y - 1, 30, 22, 0x0f172a).setStrokeStyle(3, 0x38bdf8);
+      const screen = this.add.rectangle(table.x + 45, table.y - 1, 18, 10, 0x164e63);
+      const stand = this.add.rectangle(table.x + 45, table.y + 18, 14, 7, 0x475569);
+      const keyboard = this.add.graphics();
+      this.drawKeyboard(keyboard, table.x + 45, table.y - 24);
+      const paper = this.add.rectangle(table.x - 50, table.y + 8, 20, 15, 0xf8fafc);
+      const shortLabel = this.add.text(table.x - 12, table.y - 11, table.label, {
+        fontFamily: FONT,
+        fontSize: "16px",
         color: "#e2e8f0",
         fontStyle: "bold"
       }).setOrigin(0.5);
-      const longLabel = this.add.text(table.x, table.y + 12, this.wrap(table.fullName, 20), {
-        fontSize: "11px",
+      const longLabel = this.add.text(table.x - 14, table.y + 7, this.wrap(table.fullName, 15), {
+        fontFamily: FONT,
+        fontSize: "8px",
         color: "#cbd5e1",
         align: "center"
       }).setOrigin(0.5);
-      this.tableGraphics.set(table.id, { g, shortLabel, longLabel });
+      this.tableGraphics.set(table.id, { shadow, employee, legs, g, lip, monitor, screen, stand, keyboard, paper, shortLabel, longLabel });
     });
+  }
+
+  drawKeyboard(graphics, x, y) {
+    graphics.fillStyle(0x1f2937, 1);
+    graphics.fillRect(x - 26, y - 6, 52, 14);
+    graphics.fillStyle(0x475569, 1);
+    graphics.fillRect(x - 22, y - 3, 6, 3);
+    graphics.fillRect(x - 13, y - 3, 6, 3);
+    graphics.fillRect(x - 4, y - 3, 6, 3);
+    graphics.fillRect(x + 5, y - 3, 6, 3);
+    graphics.fillRect(x + 14, y - 3, 6, 3);
+    graphics.fillRect(x - 18, y + 3, 8, 3);
+    graphics.fillRect(x - 7, y + 3, 18, 3);
+    graphics.fillRect(x + 14, y + 3, 8, 3);
   }
 
   createFlows() {
@@ -146,40 +391,36 @@ class OfficeScene extends Phaser.Scene {
   }
 
   createUI() {
-    this.hintText = this.add.text(920, 90, "WASD: Move\nE: Interact\nH: Help\n1/2/3: Difficulty", {
-      fontSize: "16px",
-      color: "#f8fafc",
-      backgroundColor: "#0f172a",
-      padding: { x: 10, y: 8 }
-    });
+    this.hudTop = this.add.graphics().setDepth(100);
+    this.hudTop.fillStyle(0x020617, 0.86);
+    this.hudTop.fillRect(0, 0, GAME_WIDTH, 62);
+    this.hudTop.lineStyle(4, 0x38bdf8, 0.88);
+    this.hudTop.lineBetween(0, 62, GAME_WIDTH, 62);
 
-    this.scoreText = this.add.text(920, 165, "Score: 0", {
-      fontSize: "20px",
-      color: "#a7f3d0",
-      fontStyle: "bold"
-    });
-
-    this.statusText = this.add.text(920, 205, "Status: Running", {
-      fontSize: "16px",
+    this.statusText = this.add.text(24, 18, "Warnings 0 | Cooldowns 0", {
+      fontFamily: FONT,
+      fontSize: "15px",
       color: "#cbd5e1"
-    });
-    this.timeText = this.add.text(920, 235, "Time: 180s", {
-      fontSize: "16px",
+    }).setDepth(101);
+    this.timeText = this.add.text(245, 18, "Time 180s", {
+      fontFamily: FONT,
+      fontSize: "15px",
       color: "#fde68a"
-    });
+    }).setDepth(101);
 
-    this.evBarBg = this.add.rectangle(930, 295, 300, 20, 0x334155).setOrigin(0, 0.5);
-    this.evBar = this.add.rectangle(930, 295, 1, 20, 0x22c55e).setOrigin(0, 0.5);
-    this.pvBarBg = this.add.rectangle(930, 355, 300, 20, 0x334155).setOrigin(0, 0.5);
-    this.pvBar = this.add.rectangle(930, 355, 1, 20, 0x3b82f6).setOrigin(0, 0.5);
+    this.evBarBg = this.add.rectangle(500, 19, 340, 14, 0x111827).setOrigin(0, 0.5).setStrokeStyle(3, 0x064e3b).setDepth(101);
+    this.evBar = this.add.rectangle(500, 19, 1, 14, 0x22c55e).setOrigin(0, 0.5).setDepth(102);
+    this.pvBarBg = this.add.rectangle(500, 43, 340, 14, 0x111827).setOrigin(0, 0.5).setStrokeStyle(3, 0x1d4ed8).setDepth(101);
+    this.pvBar = this.add.rectangle(500, 43, 1, 14, 0x3b82f6).setOrigin(0, 0.5).setDepth(102);
 
-    this.add.text(930, 264, "EV (Earned Value)", { fontSize: "14px", color: "#86efac" });
-    this.add.text(930, 324, "PV (Planned Value)", { fontSize: "14px", color: "#93c5fd" });
-    this.evPvText = this.add.text(930, 390, "EV = PV", { fontSize: "16px", color: "#f8fafc" });
-    this.difficultyText = this.add.text(930, 420, "Difficulty: Medium", {
-      fontSize: "16px",
+    this.add.text(464, 11, "EV", { fontFamily: FONT, fontSize: "14px", color: "#86efac" }).setDepth(101);
+    this.add.text(464, 35, "PV", { fontFamily: FONT, fontSize: "14px", color: "#93c5fd" }).setDepth(101);
+    this.evPvText = this.add.text(872, 18, "EV = PV", { fontFamily: FONT, fontSize: "14px", color: "#f8fafc" }).setDepth(101);
+    this.difficultyText = this.add.text(872, 39, "Difficulty Medium", {
+      fontFamily: FONT,
+      fontSize: "14px",
       color: "#c4b5fd"
-    });
+    }).setDepth(101);
 
     this.exitButton = this.add.rectangle(1215, 34, 110, 42, 0x7f1d1d)
       .setStrokeStyle(2, 0xfca5a5)
@@ -187,6 +428,7 @@ class OfficeScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
     this.exitButtonText = this.add.text(1215, 34, "EXIT", {
       fontSize: "20px",
+      fontFamily: FONT,
       color: "#fee2e2",
       fontStyle: "bold"
     }).setOrigin(0.5).setDepth(1301);
@@ -240,16 +482,20 @@ class OfficeScene extends Phaser.Scene {
 
   createStartOverlay() {
     this.startContainer = this.add.container(0, 0).setDepth(1400).setVisible(true);
+    this.isMenuOpen = true;
 
-    const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 980, 520, 0x020617, 0.96)
-      .setStrokeStyle(3, 0x22d3ee);
-    const title = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 205, "Process Panic: Test Office", {
-      fontSize: "44px",
+    const shade = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x020617, 0.58);
+    const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 520, 350, 0x111827, 0.98)
+      .setStrokeStyle(5, 0x22d3ee);
+    const title = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 120, "PROCESS PANIC", {
+      fontFamily: FONT,
+      fontSize: "34px",
       color: "#e2e8f0",
       fontStyle: "bold"
     }).setOrigin(0.5);
-    const subtitle = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 158, "Kisa Demo + Baslangic", {
-      fontSize: "22px",
+    const subtitle = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 82, "Test Office", {
+      fontFamily: FONT,
+      fontSize: "18px",
       color: "#93c5fd"
     }).setOrigin(0.5);
     const body = this.add.text(
@@ -263,17 +509,38 @@ class OfficeScene extends Phaser.Scene {
       ].join("\n"),
       { fontSize: "20px", color: "#dbeafe", lineSpacing: 14, wordWrap: { width: 860, useAdvancedWrap: true } }
     );
+    body.setVisible(false);
 
-    const button = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 150, 260, 68, 0x16a34a)
+    const button = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 6, 216, 58, 0x16a34a)
       .setStrokeStyle(3, 0x86efac)
       .setInteractive({ useHandCursor: true });
-    const buttonText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 150, "START", {
-      fontSize: "30px",
+    const buttonText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 6, "PLAY", {
+      fontFamily: FONT,
+      fontSize: "28px",
       color: "#ecfdf5",
       fontStyle: "bold"
     }).setOrigin(0.5);
-    const hint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 220, "Enter / Space ile de baslatabilirsin", {
-      fontSize: "18px",
+    this.difficultyMenuButtons = ["easy", "medium", "hard"].map((level, index) => {
+      const x = GAME_WIDTH / 2 - 130 + index * 130;
+      const box = this.add.rectangle(x, GAME_HEIGHT / 2 + 76, 112, 38, 0x1f2937)
+        .setStrokeStyle(3, 0x475569)
+        .setInteractive({ useHandCursor: true });
+      const txt = this.add.text(x, GAME_HEIGHT / 2 + 76, DIFFICULTIES[level].label.toUpperCase(), {
+        fontFamily: FONT,
+        fontSize: "14px",
+        color: "#e2e8f0",
+        fontStyle: "bold"
+      }).setOrigin(0.5);
+      box.on("pointerdown", () => this.setDifficulty(level));
+      box.on("pointerover", () => box.setFillStyle(0x334155));
+      box.on("pointerout", () => this.updateDifficultyMenu());
+      return { level, box, txt };
+    });
+    this.updateDifficultyMenu();
+
+    const hint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 138, "ESC opens this menu", {
+      fontFamily: FONT,
+      fontSize: "14px",
       color: "#94a3b8"
     }).setOrigin(0.5);
 
@@ -281,12 +548,41 @@ class OfficeScene extends Phaser.Scene {
     button.on("pointerout", () => button.setFillStyle(0x16a34a));
     button.on("pointerdown", () => this.startGame());
 
-    this.startContainer.add([bg, title, subtitle, body, button, buttonText, hint]);
+    this.startContainer.add([
+      shade,
+      bg,
+      title,
+      subtitle,
+      body,
+      button,
+      buttonText,
+      ...this.difficultyMenuButtons.flatMap((item) => [item.box, item.txt]),
+      hint
+    ]);
+  }
+
+  updateDifficultyMenu() {
+    if (!this.difficultyMenuButtons) return;
+    this.difficultyMenuButtons.forEach(({ level, box, txt }) => {
+      const selected = level === this.difficulty;
+      box.setFillStyle(selected ? 0x0f766e : 0x1f2937);
+      box.setStrokeStyle(3, selected ? 0x5eead4 : 0x475569);
+      txt.setColor(selected ? "#ecfeff" : "#e2e8f0");
+    });
+  }
+
+  syncMenuText() {
+    const buttonText = this.startContainer && this.startContainer.list[6];
+    if (buttonText && buttonText.setText) {
+      buttonText.setText(this.hasGameStarted ? "RESUME" : "PLAY");
+    }
   }
 
   startGame() {
-    if (this.hasGameStarted || this.gameOver) return;
+    if (this.gameOver) return;
     this.hasGameStarted = true;
+    this.isMenuOpen = false;
+    this.syncMenuText();
     this.alertTimer = 0;
     if (this.startContainer) this.startContainer.setVisible(false);
   }
@@ -294,17 +590,24 @@ class OfficeScene extends Phaser.Scene {
   handleEscAction() {
     if (this.isTutorialOpen) {
       this.toggleTutorial(false);
+      return;
+    }
+    if (this.currentQuiz || this.gameOver) return;
+    this.isMenuOpen = !this.isMenuOpen;
+    if (this.startContainer) {
+      this.syncMenuText();
+      this.startContainer.setVisible(this.isMenuOpen);
     }
   }
 
   createPlayer() {
-    this.player = this.add.rectangle(1080, 590, 28, 28, 0xf59e0b).setStrokeStyle(2, 0xfde68a);
+    this.player = this.add.image(1100, 624, "player-idle").setScale(1.35).setDepth(50);
     this.cursors = this.input.keyboard.addKeys("W,A,S,D");
   }
 
   update(_, delta) {
     if (this.gameOver) return;
-    if (!this.hasGameStarted) {
+    if (!this.hasGameStarted || this.isMenuOpen) {
       this.updateUiTexts();
       return;
     }
@@ -322,24 +625,53 @@ class OfficeScene extends Phaser.Scene {
       return;
     }
 
-    if (!this.currentQuiz && !this.isTutorialOpen && this.alertTimer >= this.alertEveryMs) {
+    if (!this.currentQuiz && !this.isTutorialOpen && !this.isMenuOpen && this.alertTimer >= this.alertEveryMs) {
       this.alertTimer = 0;
       this.spawnExclamation();
     }
   }
 
   handlePlayer(delta) {
-    if (this.currentQuiz || this.isTutorialOpen) {
+    if (this.currentQuiz || this.isTutorialOpen || this.isMenuOpen) {
       return;
     }
     const speed = 0.22 * delta;
-    if (this.cursors.A.isDown) this.player.x -= speed;
-    if (this.cursors.D.isDown) this.player.x += speed;
-    if (this.cursors.W.isDown) this.player.y -= speed;
-    if (this.cursors.S.isDown) this.player.y += speed;
+    const oldX = this.player.x;
+    const oldY = this.player.y;
+    let moving = false;
+    if (this.cursors.A.isDown) {
+      this.player.x -= speed;
+      this.player.setFlipX(true);
+      moving = true;
+    }
+    if (this.cursors.D.isDown) {
+      this.player.x += speed;
+      this.player.setFlipX(false);
+      moving = true;
+    }
+    if (this.cursors.W.isDown) {
+      this.player.y -= speed;
+      moving = true;
+    }
+    if (this.cursors.S.isDown) {
+      this.player.y += speed;
+      moving = true;
+    }
 
-    this.player.x = Phaser.Math.Clamp(this.player.x, 20, GAME_WIDTH - 20);
-    this.player.y = Phaser.Math.Clamp(this.player.y, 20, GAME_HEIGHT - 20);
+    if (moving) {
+      this.walkFrameMs += delta;
+      if (this.walkFrameMs > 150) {
+        this.walkFrame = 1 - this.walkFrame;
+        this.walkFrameMs = 0;
+      }
+      this.player.setTexture(this.walkFrame === 0 ? "player-walk-1" : "player-walk-2");
+    } else {
+      this.walkFrameMs = 0;
+      this.player.setTexture("player-idle");
+    }
+
+    this.player.x = Phaser.Math.Clamp(this.player.x, OFFICE.x + 18, OFFICE.x + OFFICE.width - 18);
+    this.player.y = Phaser.Math.Clamp(this.player.y, OFFICE.y + 18, OFFICE.y + OFFICE.height - 18);
   }
 
   spawnExclamation() {
@@ -347,9 +679,9 @@ class OfficeScene extends Phaser.Scene {
     if (!candidates.length) return;
     const target = Phaser.Utils.Array.GetRandom(candidates);
     target.status = "warning";
-    target.statusUntil = this.time.now + this.warningMs;
+    target.statusUntil = Number.POSITIVE_INFINITY;
     if (!target.exclamation) {
-      target.exclamation = this.add.text(target.x, target.y - 58, "!", {
+      target.exclamation = this.add.text(target.x, target.y - 90, "!", {
         fontSize: "44px",
         fontStyle: "bold",
         color: "#ef4444"
@@ -367,9 +699,7 @@ class OfficeScene extends Phaser.Scene {
 
   updateTableStatuses() {
     this.tableState.forEach((table) => {
-      if (table.status === "warning" && this.time.now >= table.statusUntil) {
-        this.applyWrongAnswer(table.id, true);
-      }
+      if (table.quizLocked) return;
       if (table.status === "cooldown" && this.time.now >= table.statusUntil) {
         table.status = "normal";
         if (table.exclamation) {
@@ -394,14 +724,21 @@ class OfficeScene extends Phaser.Scene {
   openQuiz(tableId) {
     const bank = this.questionBank[tableId] || DEFAULT_QUESTIONS[tableId];
     const question = this.pickQuestionForTable(tableId, bank);
+    const table = this.tableState.get(tableId);
+    if (table) {
+      table.quizLocked = true;
+      table.status = "warning";
+      table.statusUntil = Number.POSITIVE_INFINITY;
+      this.paintTable(tableId);
+    }
     this.currentQuiz = { tableId, question };
+    this.quizAnswered = false;
     this.renderQuiz(question, (index) => {
       if (index === question.correct) {
         this.applyCorrectAnswer(tableId);
       } else {
         this.applyWrongAnswer(tableId, false);
       }
-      this.closeQuiz();
     });
   }
 
@@ -458,7 +795,28 @@ class OfficeScene extends Phaser.Scene {
         }).setOrigin(0.5);
         this.quizContainer.add(correctMarker);
 
-        this.time.delayedCall(550, () => onSelect(idx));
+        onSelect(idx);
+        this.quizAnswered = true;
+        const feedback = this.add.text(
+          GAME_WIDTH / 2,
+          GAME_HEIGHT / 2 + 146,
+          isCorrect ? "Tebrikler! Surec normale dondu." : "Yanlis cevap! Masa cooldown'a girdi.",
+          {
+            fontSize: "20px",
+            color: isCorrect ? "#86efac" : "#fca5a5",
+            fontStyle: "bold"
+          }
+        ).setOrigin(0.5);
+        const closeButton = this.add.rectangle(GAME_WIDTH / 2 + 424, GAME_HEIGHT / 2 - 202, 42, 42, 0x7f1d1d)
+          .setStrokeStyle(3, 0xfca5a5)
+          .setInteractive({ useHandCursor: true });
+        const closeText = this.add.text(GAME_WIDTH / 2 + 424, GAME_HEIGHT / 2 - 202, "X", {
+          fontSize: "22px",
+          color: "#fee2e2",
+          fontStyle: "bold"
+        }).setOrigin(0.5);
+        closeButton.on("pointerdown", () => this.closeQuiz());
+        this.quizContainer.add([feedback, closeButton, closeText]);
       });
       this.quizContainer.add([box, txt]);
     });
@@ -484,8 +842,15 @@ class OfficeScene extends Phaser.Scene {
 
   closeQuiz() {
     this.currentQuiz = null;
+    this.quizAnswered = false;
     this.quizContainer.setVisible(false);
     this.quizContainer.removeAll(true);
+  }
+
+  closeAnsweredQuiz() {
+    if (this.currentQuiz && this.quizAnswered) {
+      this.closeQuiz();
+    }
   }
 
   toggleTutorial(forceState) {
@@ -497,6 +862,7 @@ class OfficeScene extends Phaser.Scene {
 
   applyCorrectAnswer(tableId) {
     const table = this.tableState.get(tableId);
+    table.quizLocked = false;
     table.status = "normal";
     table.statusUntil = 0;
     if (table.exclamation) {
@@ -509,8 +875,13 @@ class OfficeScene extends Phaser.Scene {
 
   applyWrongAnswer(tableId, timeoutFail) {
     const table = this.tableState.get(tableId);
+    table.quizLocked = false;
     table.status = "cooldown";
     table.statusUntil = this.time.now + this.cooldownMs;
+    if (table.exclamation) {
+      table.exclamation.destroy();
+      table.exclamation = null;
+    }
     this.score -= timeoutFail ? 7 : 5;
     this.paintTable(tableId);
   }
@@ -581,16 +952,15 @@ class OfficeScene extends Phaser.Scene {
       const from = this.tableState.get(flow.from);
       const to = this.tableState.get(flow.to);
       const edge = this.getFlowEndpoints(from, to);
-      this.flowLines.lineStyle(1.6, 0x334155, 0.52);
-      this.flowLines.strokeLineShape(new Phaser.Geom.Line(edge.fromX, edge.fromY, edge.toX, edge.toY));
-      if (flow.bidirectional) {
-        const reverseEdge = this.getFlowEndpoints(to, from);
-        this.flowLines.lineStyle(1.2, 0x334155, 0.38);
-        this.flowLines.strokeLineShape(
-          new Phaser.Geom.Line(reverseEdge.fromX + 4, reverseEdge.fromY + 4, reverseEdge.toX + 4, reverseEdge.toY + 4)
-        );
-      }
+      this.drawFlowLine(edge.fromX, edge.fromY, edge.toX, edge.toY);
     });
+  }
+
+  drawFlowLine(fromX, fromY, toX, toY) {
+    this.flowLines.lineStyle(3, 0x3f2d1f, 0.72);
+    this.flowLines.strokeLineShape(new Phaser.Geom.Line(fromX, fromY, toX, toY));
+    this.flowLines.lineStyle(1, 0xfacc15, 0.42);
+    this.flowLines.strokeLineShape(new Phaser.Geom.Line(fromX, fromY, toX, toY));
   }
 
   updateFlowDots(delta) {
@@ -602,22 +972,32 @@ class OfficeScene extends Phaser.Scene {
     }
     this.flowDots.clear();
     this.flowParticles.forEach((p) => {
-      const speed = this.getTableRate(p.from) * 0.35;
-      p.t += dt * speed;
-      if (p.t > 1) p.t -= 1;
       const from = this.tableState.get(p.from);
       const to = this.tableState.get(p.to);
+      const isBlocked = from.status !== "normal" || to.status !== "normal";
+      const speed = isBlocked ? 0 : this.getTableRate(p.from) * 0.35;
+      p.t += dt * speed;
+      if (p.t > 1) p.t -= 1;
       const edge = this.getFlowEndpoints(from, to);
       const x = Phaser.Math.Interpolation.Linear([edge.fromX, edge.toX], p.t);
       const y = Phaser.Math.Interpolation.Linear([edge.fromY, edge.toY], p.t);
-      this.flowDots.fillStyle(0x67e8f9, 0.72);
-      this.flowDots.fillCircle(x, y, 3);
+      this.drawPaperPacket(this.flowDots, Math.round(x / 4) * 4, Math.round(y / 4) * 4, isBlocked);
     });
   }
 
+  drawPaperPacket(graphics, x, y, frozen = false) {
+    graphics.fillStyle(frozen ? 0xfecaca : 0xf8fafc, 0.96);
+    graphics.fillRect(x - 7, y - 5, 14, 10);
+    graphics.fillStyle(frozen ? 0xef4444 : 0xfacc15, 0.95);
+    graphics.fillRect(x - 7, y - 5, 14, 3);
+    graphics.fillStyle(0x94a3b8, 0.9);
+    graphics.fillRect(x - 3, y, 7, 1);
+    graphics.fillRect(x - 3, y + 3, 5, 1);
+  }
+
   getFlowEndpoints(from, to) {
-    const halfW = 90;
-    const halfH = 36;
+    const halfW = 75;
+    const halfH = 29;
     const dx = to.x - from.x;
     const dy = to.y - from.y;
     const fromX = from.x + Phaser.Math.Clamp(dx, -halfW, halfW);
@@ -637,18 +1017,18 @@ class OfficeScene extends Phaser.Scene {
     const normalized = totalRate / TABLES.length;
     const warnings = Array.from(this.tableState.values()).filter((t) => t.status === "warning").length;
     const cooldown = Array.from(this.tableState.values()).filter((t) => t.status === "cooldown").length;
-    const issuePenalty = Phaser.Math.Clamp(1 - warnings * 0.06 - cooldown * 0.11, 0.35, 1);
-    const performanceFactor = Phaser.Math.Clamp(normalized * issuePenalty, 0.3, 1.25);
+    const issuePenalty = Phaser.Math.Clamp(1 - warnings * 0.14 - cooldown * 0.22, 0.28, 1);
+    const healthyBoost = warnings === 0 && cooldown === 0 ? 1.2 : 1;
+    const performanceFactor = Phaser.Math.Clamp(normalized * issuePenalty * healthyBoost, 0.25, 1.25);
     this.ev += dt * (this.plannedRatePerSec * performanceFactor);
     this.ev = Phaser.Math.Clamp(this.ev, 0, 100);
     this.pv = Phaser.Math.Clamp(this.pv, 0, 100);
 
-    this.evBar.width = Math.max(1, this.ev * 3);
-    this.pvBar.width = Math.max(1, this.pv * 3);
+    this.evBar.width = Math.max(1, this.ev * 3.4);
+    this.pvBar.width = Math.max(1, this.pv * 3.4);
   }
 
   updateUiTexts() {
-    this.scoreText.setText(`Score: ${this.score}`);
     const diff = this.ev - this.pv;
     let label = "EV = PV (Plana uygun)";
     let color = "#f8fafc";
@@ -661,12 +1041,12 @@ class OfficeScene extends Phaser.Scene {
     }
     this.evPvText.setText(label);
     this.evPvText.setColor(color);
-    this.timeText.setText(`Time: ${Math.max(0, Math.ceil(this.remainingMs / 1000))}s`);
-    this.difficultyText.setText(`Difficulty: ${DIFFICULTIES[this.difficulty].label}`);
+    this.timeText.setText(`Time ${Math.max(0, Math.ceil(this.remainingMs / 1000))}s`);
+    this.difficultyText.setText(`Difficulty ${DIFFICULTIES[this.difficulty].label}`);
 
     const warnings = Array.from(this.tableState.values()).filter((t) => t.status === "warning").length;
     const cooldown = Array.from(this.tableState.values()).filter((t) => t.status === "cooldown").length;
-    this.statusText.setText(`Status: Warning ${warnings} | Cooldown ${cooldown}`);
+    this.statusText.setText(`Warnings ${warnings} | Cooldowns ${cooldown}`);
   }
 
   setDifficulty(level) {
@@ -676,6 +1056,7 @@ class OfficeScene extends Phaser.Scene {
     this.alertEveryMs = config.alertEveryMs;
     this.warningMs = config.warningMs;
     this.cooldownMs = config.cooldownMs;
+    this.updateDifficultyMenu();
   }
 
   finishGame() {
@@ -704,6 +1085,7 @@ class OfficeScene extends Phaser.Scene {
     this.currentQuiz = null;
     this.lastQuestionByTable = {};
     this.hasGameStarted = false;
+    this.isMenuOpen = true;
 
     if (this.quizContainer) {
       this.quizContainer.setVisible(false);
@@ -714,12 +1096,14 @@ class OfficeScene extends Phaser.Scene {
       this.endContainer.removeAll(true);
     }
     if (this.startContainer) {
+      this.syncMenuText();
       this.startContainer.setVisible(true);
     }
 
     this.tableState.forEach((table) => {
       table.status = "normal";
       table.statusUntil = 0;
+      table.quizLocked = false;
       if (table.exclamation) {
         table.exclamation.destroy();
         table.exclamation = null;
@@ -750,11 +1134,19 @@ class OfficeScene extends Phaser.Scene {
       `Final Score: ${this.score}\nEV: ${this.ev.toFixed(1)} | PV: ${this.pv.toFixed(1)}`,
       { fontSize: "30px", align: "center", color: "#e2e8f0" }
     ).setOrigin(0.5);
-    const hint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 135, "Sayfayi yenileyerek yeniden baslatabilirsin.", {
-      fontSize: "18px",
-      color: "#93c5fd"
+    const restartButton = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 135, 230, 54, 0x16a34a)
+      .setStrokeStyle(3, 0x86efac)
+      .setInteractive({ useHandCursor: true });
+    const restartText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 135, "PLAY AGAIN", {
+      fontFamily: FONT,
+      fontSize: "22px",
+      color: "#ecfdf5",
+      fontStyle: "bold"
     }).setOrigin(0.5);
-    this.endContainer.add([bg, titleText, messageText, statsText, hint]);
+    restartButton.on("pointerover", () => restartButton.setFillStyle(0x15803d));
+    restartButton.on("pointerout", () => restartButton.setFillStyle(0x16a34a));
+    restartButton.on("pointerdown", () => this.restartGame());
+    this.endContainer.add([bg, titleText, messageText, statsText, restartButton, restartText]);
     this.endContainer.setVisible(true);
   }
 
@@ -763,14 +1155,23 @@ class OfficeScene extends Phaser.Scene {
     const graphics = this.tableGraphics.get(tableId);
     if (!state || !graphics) return;
     if (state.status === "normal") {
-      graphics.g.setFillStyle(0x1f2937);
-      graphics.g.setStrokeStyle(2, 0x60a5fa);
+      graphics.g.setFillStyle(0x6b4423);
+      graphics.g.setStrokeStyle(4, 0x2b170c);
+      graphics.lip.setFillStyle(0x8b5a2b);
+      graphics.monitor.setStrokeStyle(3, 0x38bdf8);
+      graphics.screen.setFillStyle(0x164e63);
     } else if (state.status === "warning") {
-      graphics.g.setFillStyle(0x3f1d1d);
-      graphics.g.setStrokeStyle(3, 0xef4444);
+      graphics.g.setFillStyle(0x7f2d20);
+      graphics.g.setStrokeStyle(4, 0xef4444);
+      graphics.lip.setFillStyle(0x7f1d1d);
+      graphics.monitor.setStrokeStyle(3, 0xef4444);
+      graphics.screen.setFillStyle(0x450a0a);
     } else {
-      graphics.g.setFillStyle(0x3f3f46);
-      graphics.g.setStrokeStyle(3, 0xf59e0b);
+      graphics.g.setFillStyle(0x5b4b2d);
+      graphics.g.setStrokeStyle(4, 0xf59e0b);
+      graphics.lip.setFillStyle(0x92400e);
+      graphics.monitor.setStrokeStyle(3, 0xf59e0b);
+      graphics.screen.setFillStyle(0x451a03);
     }
   }
 
@@ -797,6 +1198,15 @@ const gameConfig = {
   width: GAME_WIDTH,
   height: GAME_HEIGHT,
   parent: "game-root",
+  pixelArt: true,
+  roundPixels: true,
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    parent: "game-root",
+    width: GAME_WIDTH,
+    height: GAME_HEIGHT
+  },
   scene: [OfficeScene]
 };
 
