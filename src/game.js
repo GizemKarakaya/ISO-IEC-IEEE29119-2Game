@@ -19,7 +19,10 @@ const COLORS = {
 };
 
 const FONT = '"Courier New", monospace';
+const TABLE_LABEL_FONT = '"Segoe UI", Arial, sans-serif';
 const OFFICE = { x: 24, y: 78, width: 1232, height: 612 };
+const TABLE_W = 176;
+const TABLE_H = 72;
 const LAYERS = [
   { title: "Organizational Layer", y: 98, h: 134, wall: 0x2f4a3f, floor: 0x8b6f47, floorAlt: 0x7b623f, trim: 0x38bdf8 },
   { title: "Test Management Layer", y: 292, h: 144, wall: 0x4a405d, floor: 0x9a7650, floorAlt: 0x856645, trim: 0xa78bfa },
@@ -27,8 +30,9 @@ const LAYERS = [
 ];
 
 const TABLES = [
-  { id: "OT1", label: "OT1", fullName: "Develop Organizational Test Specification", layer: "organizational", x: 200, y: 164, baseRate: 1.0 },
-  { id: "OT3", label: "OT3", fullName: "Update Organizational Test Specification", layer: "organizational", x: 480, y: 164, baseRate: 1.0 },
+  { id: "OT1", label: "OT1", fullName: "Develop Organizational Test Specification", layer: "organizational", x: 270, y: 188, baseRate: 1.0 },
+  { id: "OT2", label: "OT2", fullName: "Monitor and Control Organizational Test Specification", layer: "organizational", x: 590, y: 188, baseRate: 1.0 },
+  { id: "OT3", label: "OT3", fullName: "Update Organizational Test Specification", layer: "organizational", x: 910, y: 188, baseRate: 1.0 },
   { id: "TMP1", label: "TMP1", fullName: "Test Strategy and Planning", layer: "management", x: 210, y: 364, baseRate: 1.0 },
   { id: "TMP2", label: "TMP2", fullName: "Test Monitoring and Control", layer: "management", x: 500, y: 364, baseRate: 1.1 },
   { id: "TMP3", label: "TMP3", fullName: "Test Completion", layer: "management", x: 790, y: 364, baseRate: 1.0 },
@@ -39,39 +43,38 @@ const TABLES = [
 ];
 
 const FLOWS = [
-  { from: "OT1", to: "OT3" },
-  { from: "TMP1", to: "TMP2", bidirectional: true },
-  { from: "TMP2", to: "TMP3", bidirectional: true },
-  { from: "DP1", to: "DP3" },
-  { from: "DP2", to: "DP3" },
-  { from: "DP3", to: "DP4" },
-  { from: "DP4", to: "TMP2" },
-  { from: "DP4", to: "OT3" },
-  { from: "TMP2", to: "TMP1" },
-  { from: "TMP2", to: "DP1" },
-  { from: "TMP2", to: "DP2" },
-  { from: "TMP2", to: "DP3" }
+  { from: "OT1", to: "OT2", type: "primary" },
+  { from: "OT2", to: "OT3", type: "primary" },
+  { from: "OT2", to: "TMP2", type: "primary" },
+  { from: "OT1", to: "TMP1", type: "primary" },
+  { from: "TMP1", to: "TMP2", type: "primary" },
+  { from: "TMP2", to: "TMP1", type: "feedback" },
+  { from: "TMP2", to: "TMP3", type: "primary" },
+  { from: "TMP3", to: "TMP2", type: "feedback" },
+  { from: "TMP2", to: "DP1", type: "primary" },
+  { from: "TMP2", to: "DP2", type: "primary" },
+  { from: "DP1", to: "DP3", type: "primary" },
+  { from: "DP2", to: "DP3", type: "primary" },
+  { from: "DP3", to: "DP4", type: "primary" },
+  { from: "TMP2", to: "DP3", type: "feedback" },
+  { from: "DP4", to: "TMP2", type: "feedback" },
+  { from: "DP4", to: "OT3", type: "feedback" }
 ];
 
 const DEFAULT_QUESTIONS = {
-  OT1: [{ q: "OT1’in temel amacı nedir?", options: ["Organizasyon seviyesinde test yaklaşımını tanımlamak", "Yalnızca test execution yapmak", "Sadece incident kaydetmek"], correct: 0 }],
-  OT3: [{ q: "OT3 neyi temsil eder?", options: ["Organizasyonel test spesifikasyonunu güncellemeyi", "Yalnızca test ortamı kurmayı", "Plan dışı deployment yapmayı"], correct: 0 }],
-  TMP1: [{ q: "TMP1’in odağı nedir?", options: ["Planlama ve strateji", "Sadece kod yazma", "Sadece bug kapatma"], correct: 0 }],
-  TMP2: [{ q: "TMP2’nin kritik görevi hangisi?", options: ["Planlanan ve gerçekleşen ilerlemeyi izlemek ve kontrol etmek", "Yalnızca test case yazmak", "Sadece rapor basmak"], correct: 0 }],
-  TMP3: [{ q: "TMP3 sürecinde ne beklenir?", options: ["Test kapanış aktiviteleri ve sonuçların tamamlanması", "Yeni test stratejisi başlatmak", "Ortam kurulumu yapmak"], correct: 0 }],
-  DP1: [{ q: "DP1, DP3’ü neden etkiler?", options: ["Design/implementation çıktıları execution’ı besler", "Hiçbir bağlantı yoktur", "Execution, design’dan önce gelir"], correct: 0 }],
-  DP2: [{ q: "DP2’nin ana katkısı nedir?", options: ["Test environment ve data yönetimi sağlamak", "Sadece rapor yazmak", "Sadece plan barını artırmak"], correct: 0 }],
-  DP3: [{ q: "DP3 hangi süreci temsil eder?", options: ["Test execution", "Organizasyon güncelleme", "Kapanış yönetimi"], correct: 0 }],
-  DP4: [{ q: "DP4’den TMP2’ye giden geri bildirim neyi sağlar?", options: ["Monitoring ve corrective control için bilgi sağlar", "Akışı tamamen yok sayar", "PV barını durdurur"], correct: 0 }]
+  ORG: {
+    easy: [{ q: "What is the main purpose of the Organizational Test Process?", options: ["To execute test cases", "To develop and manage organizational test specifications", "To report software defects", "To close the test environment"], correct: 1 }],
+    medium: [{ q: "What does monitoring conformance in the Organizational Test Process help achieve?", options: ["It checks whether organizational test specifications are being followed", "It replaces test execution", "It creates test data automatically", "It removes stakeholders from testing"], correct: 0 }],
+    hard: [{ q: "Why is the Organizational Test Process considered a governance-level process?", options: ["Because it runs every test case manually", "Because it defines organization-wide rules, policies, and practices for testing", "Because it only reports defects", "Because it only prepares test data"], correct: 1 }]
+  }
 };
-
 const DIFFICULTIES = {
-  easy: { label: "Easy", alertEveryMs: 5200, warningMs: 9000, cooldownMs: 5200 },
-  medium: { label: "Medium", alertEveryMs: 4200, warningMs: 7600, cooldownMs: 6800 },
-  hard: { label: "Hard", alertEveryMs: 3200, warningMs: 6200, cooldownMs: 8200 }
+  easy: { label: "Easy", alertEveryMs: 10000, warningMs: 9000, cooldownMs: 5200 },
+  medium: { label: "Medium", alertEveryMs: 10000, warningMs: 7600, cooldownMs: 6800 },
+  hard: { label: "Hard", alertEveryMs: 10000, warningMs: 6200, cooldownMs: 8200 }
 };
 
-const SHOW_CORRECT_ANSWER_DEBUG = true;
+const SHOW_CORRECT_ANSWER_DEBUG = false;
 
 class OfficeScene extends Phaser.Scene {
   constructor() {
@@ -92,20 +95,27 @@ class OfficeScene extends Phaser.Scene {
     this.isMenuOpen = false;
     this.score = 0;
     this.questionBank = DEFAULT_QUESTIONS;
-    this.gameDurationMs = 180000;
+    this.gameDurationMs = 90000;
     this.remainingMs = this.gameDurationMs;
     this.plannedRatePerSec = 100 / (this.gameDurationMs / 1000);
     this.hasGameStarted = false;
     this.gameOver = false;
     this.gameResultText = "";
     this.lastQuestionByTable = {};
+    this.questionHistoryByTable = {};
+    this.recentAlertTables = [];
+    this.alertCountByTable = {};
     this.walkFrameMs = 0;
     this.walkFrame = 0;
     this.quizAnswered = false;
+    this.usingCustomPlayer = true;
+    this.customPlayerReady = false;
   }
 
   preload() {
-    this.load.json("questions", "./src/questions.json");
+    this.load.json("questions", "./src/questions.json?v=20260509-questions");
+    this.load.image("player-custom", "./src/player-custom.png?v=20260509-main-character");
+    this.load.image("player-custom-walk", "./src/player-custom.png?v=20260509-main-character");
   }
 
   create() {
@@ -130,6 +140,7 @@ class OfficeScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-THREE", () => this.setDifficulty("hard"));
     this.input.keyboard.on("keydown-ENTER", () => this.startGame());
     this.input.keyboard.on("keydown-SPACE", () => this.startGame());
+    this.input.keyboard.on("keydown-K", () => this.togglePlayerModel());
     this.input.keyboard.on("keydown-ESC", () => this.handleEscAction());
     this.input.keyboard.on("keydown-W", () => this.closeAnsweredQuiz());
     this.input.keyboard.on("keydown-A", () => this.closeAnsweredQuiz());
@@ -308,10 +319,11 @@ class OfficeScene extends Phaser.Scene {
         status: "normal",
         statusUntil: 0,
         quizLocked: false,
-        exclamation: null
+        exclamation: null,
+        alertCount: 0
       });
 
-      const shadow = this.add.rectangle(table.x + 6, table.y + 10, 150, 60, 0x020617, 0.44);
+      const shadow = this.add.rectangle(table.x + 6, table.y + 12, TABLE_W, TABLE_H, 0x020617, 0.44);
       const employee = this.add.graphics();
       const shirt = table.x % 3 === 0 ? 0x0ea5e9 : table.x % 2 === 0 ? 0x22c55e : 0xf97316;
       const hair = [0x3b2417, 0x111827, 0x92400e, 0x581c87][TABLES.indexOf(table) % 4];
@@ -340,31 +352,29 @@ class OfficeScene extends Phaser.Scene {
       employee.fillStyle(0xf2c6a0);
       employee.fillRect(table.x - 24, table.y - 30, 10, 6);
       employee.fillRect(table.x + 14, table.y - 30, 10, 6);
+      employee.setY(-5);
       const legs = this.add.graphics();
       legs.fillStyle(0x111827);
-      legs.fillRect(table.x - 64, table.y + 22, 10, 20);
-      legs.fillRect(table.x + 54, table.y + 22, 10, 20);
-      const g = this.add.rectangle(table.x, table.y, 150, 58, 0x6b4423).setStrokeStyle(4, 0x2b170c);
-      const lip = this.add.rectangle(table.x, table.y - 23, 134, 10, 0x8b5a2b);
-      const monitor = this.add.rectangle(table.x + 45, table.y - 1, 30, 22, 0x0f172a).setStrokeStyle(3, 0x38bdf8);
-      const screen = this.add.rectangle(table.x + 45, table.y - 1, 18, 10, 0x164e63);
-      const stand = this.add.rectangle(table.x + 45, table.y + 18, 14, 7, 0x475569);
+      legs.fillRect(table.x - 76, table.y + 30, 10, 20);
+      legs.fillRect(table.x + 66, table.y + 30, 10, 20);
+      const g = this.add.rectangle(table.x, table.y, TABLE_W, TABLE_H, 0x6b4423).setStrokeStyle(4, 0x2b170c);
+      const lip = this.add.rectangle(table.x, table.y - 30, TABLE_W - 18, 10, 0x8b5a2b);
+      const monitor = this.add.rectangle(table.x + 58, table.y + 2, 30, 22, 0x0f172a).setStrokeStyle(3, 0x38bdf8);
+      const screen = this.add.rectangle(table.x + 58, table.y + 2, 18, 10, 0x164e63);
+      const stand = this.add.rectangle(table.x + 58, table.y + 21, 14, 7, 0x475569);
       const keyboard = this.add.graphics();
-      this.drawKeyboard(keyboard, table.x + 45, table.y - 24);
-      const paper = this.add.rectangle(table.x - 50, table.y + 8, 20, 15, 0xf8fafc);
-      const shortLabel = this.add.text(table.x - 12, table.y - 11, table.label, {
-        fontFamily: FONT,
-        fontSize: "16px",
-        color: "#e2e8f0",
-        fontStyle: "bold"
+      this.drawKeyboard(keyboard, table.x + 58, table.y - 22);
+      const processLabel = this.add.text(table.x - 30, table.y + 2, this.wrap(table.fullName, 18), {
+        fontFamily: TABLE_LABEL_FONT,
+        fontSize: "11px",
+        color: "#fff7ed",
+        align: "center",
+        fontStyle: "700",
+        lineSpacing: 0,
+        resolution: 2,
+        wordWrap: { width: 116, useAdvancedWrap: true }
       }).setOrigin(0.5);
-      const longLabel = this.add.text(table.x - 14, table.y + 7, this.wrap(table.fullName, 15), {
-        fontFamily: FONT,
-        fontSize: "8px",
-        color: "#cbd5e1",
-        align: "center"
-      }).setOrigin(0.5);
-      this.tableGraphics.set(table.id, { shadow, employee, legs, g, lip, monitor, screen, stand, keyboard, paper, shortLabel, longLabel });
+      this.tableGraphics.set(table.id, { shadow, employee, legs, g, lip, monitor, screen, stand, keyboard, processLabel });
     });
   }
 
@@ -402,7 +412,7 @@ class OfficeScene extends Phaser.Scene {
       fontSize: "15px",
       color: "#cbd5e1"
     }).setDepth(101);
-    this.timeText = this.add.text(245, 18, "Time 180s", {
+    this.timeText = this.add.text(245, 18, "Time 90s", {
       fontFamily: FONT,
       fontSize: "15px",
       color: "#fde68a"
@@ -445,7 +455,7 @@ class OfficeScene extends Phaser.Scene {
 
     const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 940, 460, 0x020617, 0.96)
       .setStrokeStyle(3, 0x38bdf8);
-    const title = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 175, "Kucuk Demo: Nasil Oynanir?", {
+    const title = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 175, "Quick Demo: How to Play", {
       fontSize: "36px",
       color: "#f8fafc",
       fontStyle: "bold"
@@ -455,13 +465,13 @@ class OfficeScene extends Phaser.Scene {
       GAME_WIDTH / 2 - 420,
       GAME_HEIGHT / 2 - 112,
       [
-        "1) WASD ile ofiste gez.",
-        "2) Masanin ustunde ! gorursen o masa yavasliyor demektir.",
-        "3) Masaya yaklasip E tusuna bas ve soruyu ac.",
-        "4) Dogru cevap: masa normale doner, EV toparlar.",
-        "5) Yanlis/gec cevap: masa cooldown olur, bagli akislar yavaslar.",
+        "1) Move around the office with WASD.",
+        "2) If you see ! on a desk, that process is slowing down.",
+        "3) Walk to the desk and press E to open the question.",
+        "4) Correct answer: the process returns to normal and EV recovers.",
+        "5) Wrong or late answer: the desk enters cooldown and linked flows slow down.",
         "",
-        "Hedef: EV barini PV'den cok geride birakma."
+        "Goal: keep EV from falling far behind PV."
       ].join("\n"),
       {
         fontSize: "18px",
@@ -472,7 +482,7 @@ class OfficeScene extends Phaser.Scene {
       }
     );
 
-    const closeHint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 185, "Kapat: H veya ESC", {
+    const closeHint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 185, "Close: H or ESC", {
       fontSize: "18px",
       color: "#93c5fd"
     }).setOrigin(0.5);
@@ -485,47 +495,68 @@ class OfficeScene extends Phaser.Scene {
     this.isMenuOpen = true;
 
     const shade = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x020617, 0.58);
-    const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 520, 350, 0x111827, 0.98)
+    const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 1080, 640, 0x111827, 0.98)
       .setStrokeStyle(5, 0x22d3ee);
-    const title = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 120, "PROCESS PANIC", {
+    const title = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 275, "PROCESS PANIC", {
       fontFamily: FONT,
       fontSize: "34px",
       color: "#e2e8f0",
       fontStyle: "bold"
     }).setOrigin(0.5);
-    const subtitle = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 82, "Test Office", {
+    const subtitle = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 238, "Test Office", {
       fontFamily: FONT,
       fontSize: "18px",
       color: "#93c5fd"
     }).setOrigin(0.5);
     const body = this.add.text(
-      GAME_WIDTH / 2 - 430,
-      GAME_HEIGHT / 2 - 105,
+      GAME_WIDTH / 2 - 460,
+      GAME_HEIGHT / 2 - 205,
       [
-        "• Masalarda ! cikarsa surec yavaslar.",
-        "• Masaya gidip E ile soruyu ac, dogru cevapla akisi toparla.",
-        "• Yanlis/gec cevap cooldown olusturur, EV duser.",
-        "• H ile yardim panelini her zaman acabilirsin."
-      ].join("\n"),
-      { fontSize: "20px", color: "#dbeafe", lineSpacing: 14, wordWrap: { width: 860, useAdvancedWrap: true } }
+        "Goal:",
+        "- Keep Earned Value (EV) close to or ahead of Planned Value (PV) before time runs out.",
+        "",
+        "Game structure:",
+        "- Each desk is an ISO/IEC/IEEE 29119-2 process.",
+        "- After the first warning, process desks may raise warnings every 10 seconds.",
+        "- Walk near a warning desk and press E to answer a process question.",
+        "- The selected difficulty controls which question set appears.",
+        "- Correct answers recover EV; wrong answers put the desk in cooldown.",
+        "- H opens help. ESC opens the pause menu.",
+        ""
+      ].join("\n"),      { fontSize: "15px", color: "#dbeafe", lineSpacing: 4, wordWrap: { width: 920, useAdvancedWrap: true } }
     );
-    body.setVisible(false);
+    body.setVisible(true);
 
-    const button = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 6, 216, 58, 0x16a34a)
+    const legendGraphics = this.add.graphics();
+    this.drawLegendArrow(legendGraphics, GAME_WIDTH / 2 - 395, GAME_HEIGHT / 2 + 62, 0x60a5fa);
+    this.drawLegendArrow(legendGraphics, GAME_WIDTH / 2 - 395, GAME_HEIGHT / 2 + 94, 0x5eead4);
+    const primaryLegend = this.add.text(GAME_WIDTH / 2 - 330, GAME_HEIGHT / 2 + 50, "Blue arrows: main process sequence", {
+      fontFamily: TABLE_LABEL_FONT,
+      fontSize: "15px",
+      color: "#dbeafe"
+    });
+    const feedbackLegend = this.add.text(GAME_WIDTH / 2 - 330, GAME_HEIGHT / 2 + 82, "Teal arrows: monitoring and feedback paths", {
+      fontFamily: TABLE_LABEL_FONT,
+      fontSize: "15px",
+      color: "#ccfbf1"
+    });
+
+    const button = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 170, 216, 58, 0x16a34a)
       .setStrokeStyle(3, 0x86efac)
       .setInteractive({ useHandCursor: true });
-    const buttonText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 6, "PLAY", {
+    const buttonText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 170, "PLAY", {
       fontFamily: FONT,
       fontSize: "28px",
       color: "#ecfdf5",
       fontStyle: "bold"
     }).setOrigin(0.5);
+    this.playButtonText = buttonText;
     this.difficultyMenuButtons = ["easy", "medium", "hard"].map((level, index) => {
       const x = GAME_WIDTH / 2 - 130 + index * 130;
-      const box = this.add.rectangle(x, GAME_HEIGHT / 2 + 76, 112, 38, 0x1f2937)
+      const box = this.add.rectangle(x, GAME_HEIGHT / 2 + 250, 112, 38, 0x1f2937)
         .setStrokeStyle(3, 0x475569)
         .setInteractive({ useHandCursor: true });
-      const txt = this.add.text(x, GAME_HEIGHT / 2 + 76, DIFFICULTIES[level].label.toUpperCase(), {
+      const txt = this.add.text(x, GAME_HEIGHT / 2 + 250, DIFFICULTIES[level].label.toUpperCase(), {
         fontFamily: FONT,
         fontSize: "14px",
         color: "#e2e8f0",
@@ -538,7 +569,7 @@ class OfficeScene extends Phaser.Scene {
     });
     this.updateDifficultyMenu();
 
-    const hint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 138, "ESC opens this menu", {
+    const hint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 292, "ESC opens the pause menu during play", {
       fontFamily: FONT,
       fontSize: "14px",
       color: "#94a3b8"
@@ -547,18 +578,79 @@ class OfficeScene extends Phaser.Scene {
     button.on("pointerover", () => button.setFillStyle(0x15803d));
     button.on("pointerout", () => button.setFillStyle(0x16a34a));
     button.on("pointerdown", () => this.startGame());
-
     this.startContainer.add([
       shade,
       bg,
       title,
       subtitle,
       body,
+      legendGraphics,
+      primaryLegend,
+      feedbackLegend,
       button,
       buttonText,
       ...this.difficultyMenuButtons.flatMap((item) => [item.box, item.txt]),
       hint
     ]);
+    this.createPauseMenu();
+  }
+
+  drawLegendArrow(graphics, x, y, color) {
+    graphics.lineStyle(4, 0x020617, 0.6);
+    graphics.lineBetween(x, y, x + 48, y);
+    graphics.lineStyle(2, color, 0.95);
+    graphics.lineBetween(x, y, x + 48, y);
+    graphics.fillStyle(color, 0.95);
+    graphics.beginPath();
+    graphics.moveTo(x + 56, y);
+    graphics.lineTo(x + 44, y - 7);
+    graphics.lineTo(x + 44, y + 7);
+    graphics.closePath();
+    graphics.fillPath();
+  }
+
+  createPauseMenu() {
+    this.pauseContainer = this.add.container(0, 0).setDepth(1450).setVisible(false);
+    const shade = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x020617, 0.58);
+    const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 520, 330, 0x111827, 0.98)
+      .setStrokeStyle(5, 0x5eead4);
+    const title = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 112, "PAUSE MENU", {
+      fontFamily: FONT,
+      fontSize: "32px",
+      color: "#ecfeff",
+      fontStyle: "bold"
+    }).setOrigin(0.5);
+    const resumeButton = this.add.rectangle(GAME_WIDTH / 2 - 125, GAME_HEIGHT / 2 - 12, 210, 58, 0x16a34a)
+      .setStrokeStyle(3, 0x86efac)
+      .setInteractive({ useHandCursor: true });
+    const resumeText = this.add.text(GAME_WIDTH / 2 - 125, GAME_HEIGHT / 2 - 12, "RESUME", {
+      fontFamily: FONT,
+      fontSize: "24px",
+      color: "#ecfdf5",
+      fontStyle: "bold"
+    }).setOrigin(0.5);
+    const restartButton = this.add.rectangle(GAME_WIDTH / 2 + 125, GAME_HEIGHT / 2 - 12, 210, 58, 0x0f766e)
+      .setStrokeStyle(3, 0x5eead4)
+      .setInteractive({ useHandCursor: true });
+    const restartText = this.add.text(GAME_WIDTH / 2 + 125, GAME_HEIGHT / 2 - 12, "RESTART", {
+      fontFamily: FONT,
+      fontSize: "24px",
+      color: "#ecfeff",
+      fontStyle: "bold"
+    }).setOrigin(0.5);
+    const hint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 92, "Change difficulty from the start screen. Changing it resets the game.", {
+      fontFamily: TABLE_LABEL_FONT,
+      fontSize: "15px",
+      color: "#cbd5e1",
+      align: "center",
+      wordWrap: { width: 430, useAdvancedWrap: true }
+    }).setOrigin(0.5);
+    resumeButton.on("pointerdown", () => {
+      this.isMenuOpen = false;
+      this.pauseContainer.setVisible(false);
+    });
+    restartButton.on("pointerdown", () => this.restartGame());
+    this.pauseContainer.add([shade, bg, title, resumeButton, resumeText, restartButton, restartText, hint]);
   }
 
   updateDifficultyMenu() {
@@ -572,9 +664,8 @@ class OfficeScene extends Phaser.Scene {
   }
 
   syncMenuText() {
-    const buttonText = this.startContainer && this.startContainer.list[6];
-    if (buttonText && buttonText.setText) {
-      buttonText.setText(this.hasGameStarted ? "RESUME" : "PLAY");
+    if (this.playButtonText && this.playButtonText.setText) {
+      this.playButtonText.setText(this.hasGameStarted ? "RESUME" : "PLAY");
     }
   }
 
@@ -583,8 +674,9 @@ class OfficeScene extends Phaser.Scene {
     this.hasGameStarted = true;
     this.isMenuOpen = false;
     this.syncMenuText();
-    this.alertTimer = 0;
+    this.alertTimer = this.alertEveryMs - 2000;
     if (this.startContainer) this.startContainer.setVisible(false);
+    if (this.pauseContainer) this.pauseContainer.setVisible(false);
   }
 
   handleEscAction() {
@@ -593,16 +685,36 @@ class OfficeScene extends Phaser.Scene {
       return;
     }
     if (this.currentQuiz || this.gameOver) return;
+    if (!this.hasGameStarted) {
+      this.isMenuOpen = !this.isMenuOpen;
+      if (this.startContainer) this.startContainer.setVisible(this.isMenuOpen);
+      return;
+    }
     this.isMenuOpen = !this.isMenuOpen;
-    if (this.startContainer) {
-      this.syncMenuText();
-      this.startContainer.setVisible(this.isMenuOpen);
+    if (this.pauseContainer) {
+      this.pauseContainer.setVisible(this.isMenuOpen);
     }
   }
 
   createPlayer() {
-    this.player = this.add.image(1100, 624, "player-idle").setScale(1.35).setDepth(50);
+    this.customPlayerReady = this.textures.exists("player-custom");
+    this.usingCustomPlayer = this.customPlayerReady;
+    this.player = this.add.image(1100, 624, this.usingCustomPlayer ? "player-custom" : "player-idle")
+      .setScale(this.usingCustomPlayer ? 0.062 : 1.35)
+      .setOrigin(0.5, this.usingCustomPlayer ? 0.72 : 0.5)
+      .setDepth(50);
     this.cursors = this.input.keyboard.addKeys("W,A,S,D");
+  }
+
+  togglePlayerModel() {
+    if (!this.player) return;
+    if (!this.textures.exists("player-custom")) return;
+    this.usingCustomPlayer = !this.usingCustomPlayer;
+    if (this.usingCustomPlayer) {
+      this.player.setTexture("player-custom").setScale(0.062).setOrigin(0.5, 0.72);
+    } else {
+      this.player.setTexture("player-idle").setScale(1.35).setDisplaySize(43, 43).setOrigin(0.5, 0.5);
+    }
   }
 
   update(_, delta) {
@@ -664,22 +776,63 @@ class OfficeScene extends Phaser.Scene {
         this.walkFrame = 1 - this.walkFrame;
         this.walkFrameMs = 0;
       }
-      this.player.setTexture(this.walkFrame === 0 ? "player-walk-1" : "player-walk-2");
+      if (!this.usingCustomPlayer) {
+        this.player.setTexture(this.walkFrame === 0 ? "player-walk-1" : "player-walk-2");
+      } else {
+        this.player.setTexture("player-custom").setScale(0.062).setOrigin(0.5, 0.72);
+      }
     } else {
       this.walkFrameMs = 0;
-      this.player.setTexture("player-idle");
+      if (!this.usingCustomPlayer) {
+        this.player.setTexture("player-idle");
+      } else {
+        this.player.setTexture("player-custom").setScale(0.062).setOrigin(0.5, 0.72);
+      }
     }
 
     this.player.x = Phaser.Math.Clamp(this.player.x, OFFICE.x + 18, OFFICE.x + OFFICE.width - 18);
     this.player.y = Phaser.Math.Clamp(this.player.y, OFFICE.y + 18, OFFICE.y + OFFICE.height - 18);
+    if (this.isPlayerBlockedByTable()) {
+      this.player.x = oldX;
+      this.player.y = oldY;
+    }
+  }
+
+  isPlayerBlockedByTable() {
+    const px = this.player.x;
+    const py = this.player.y;
+    const halfW = TABLE_W / 2 + 2;
+    const halfH = TABLE_H / 2 + 2;
+    return TABLES.some((table) => (
+      px > table.x - halfW &&
+      px < table.x + halfW &&
+      py > table.y - halfH &&
+      py < table.y + halfH
+    ));
   }
 
   spawnExclamation() {
-    const candidates = Array.from(this.tableState.values()).filter((t) => t.status === "normal");
+    const candidates = Array.from(this.tableState.values()).filter((t) => (
+      t.status === "normal" &&
+      t.alertCount < 3 &&
+      !this.recentAlertTables.includes(t.id)
+    ));
+    if (!candidates.length) {
+      this.recentAlertTables = this.recentAlertTables.slice(-2);
+      const fallback = Array.from(this.tableState.values()).filter((t) => t.status === "normal" && t.alertCount < 3);
+      if (!fallback.length) return;
+      candidates.push(...fallback);
+    }
     if (!candidates.length) return;
     const target = Phaser.Utils.Array.GetRandom(candidates);
     target.status = "warning";
     target.statusUntil = Number.POSITIVE_INFINITY;
+    target.alertCount += 1;
+    this.alertCountByTable[target.id] = target.alertCount;
+    this.recentAlertTables.push(target.id);
+    if (this.recentAlertTables.length > 4) {
+      this.recentAlertTables.shift();
+    }
     if (!target.exclamation) {
       target.exclamation = this.add.text(target.x, target.y - 90, "!", {
         fontSize: "44px",
@@ -722,8 +875,10 @@ class OfficeScene extends Phaser.Scene {
   }
 
   openQuiz(tableId) {
-    const bank = this.questionBank[tableId] || DEFAULT_QUESTIONS[tableId];
+    const bankKey = this.getQuestionBankKey(tableId);
+    const bank = this.resolveQuestionBank(bankKey);
     const question = this.pickQuestionForTable(tableId, bank);
+    if (!question) return;
     const table = this.tableState.get(tableId);
     if (table) {
       table.quizLocked = true;
@@ -744,27 +899,29 @@ class OfficeScene extends Phaser.Scene {
 
   renderQuiz(question, onSelect) {
     this.quizContainer.removeAll(true);
-    const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 920, 460, 0x020617, 0.95)
+    const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 1120, 560, 0x020617, 0.95)
       .setStrokeStyle(3, 0x60a5fa);
-    const qText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 170, this.wrap(question.q, 66), {
-      fontSize: "22px",
+    const qText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 225, this.wrap(question.q, 82), {
+      fontSize: "20px",
       color: "#f8fafc",
-      align: "center"
+      align: "center",
+      wordWrap: { width: 1020, useAdvancedWrap: true },
+      lineSpacing: 4
     }).setOrigin(0.5);
     this.quizContainer.add([bg, qText]);
 
     let isAnswered = false;
     question.options.forEach((option, idx) => {
-      const y = GAME_HEIGHT / 2 - 50 + idx * 96;
-      const box = this.add.rectangle(GAME_WIDTH / 2, y, 780, 74, 0x1e293b)
+      const y = GAME_HEIGHT / 2 - 120 + idx * 82;
+      const box = this.add.rectangle(GAME_WIDTH / 2, y, 1000, 64, 0x1e293b)
         .setStrokeStyle(2, 0x64748b)
         .setInteractive({ useHandCursor: true });
-      const txt = this.add.text(GAME_WIDTH / 2 - 372, y, `${idx + 1}) ${option}`, {
-        fontSize: "18px",
+      const txt = this.add.text(GAME_WIDTH / 2 - 476, y, `${idx + 1}. ${option}`, {
+        fontSize: "16px",
         color: "#e2e8f0",
         align: "left",
-        wordWrap: { width: 730, useAdvancedWrap: true },
-        lineSpacing: 2
+        wordWrap: { width: 920, useAdvancedWrap: true },
+        lineSpacing: 1
       }).setOrigin(0, 0.5);
       box.on("pointerover", () => box.setFillStyle(0x334155));
       box.on("pointerout", () => box.setFillStyle(0x1e293b));
@@ -787,9 +944,9 @@ class OfficeScene extends Phaser.Scene {
           }
         });
 
-        const correctY = GAME_HEIGHT / 2 - 50 + question.correct * 96;
-        const correctMarker = this.add.text(GAME_WIDTH / 2 + 382, correctY, "✓", {
-          fontSize: "30px",
+        const correctY = GAME_HEIGHT / 2 - 120 + question.correct * 82;
+        const correctMarker = this.add.text(GAME_WIDTH / 2 + 486, correctY, "OK", {
+          fontSize: "18px",
           color: "#22c55e",
           fontStyle: "bold"
         }).setOrigin(0.5);
@@ -799,18 +956,18 @@ class OfficeScene extends Phaser.Scene {
         this.quizAnswered = true;
         const feedback = this.add.text(
           GAME_WIDTH / 2,
-          GAME_HEIGHT / 2 + 146,
-          isCorrect ? "Tebrikler! Surec normale dondu." : "Yanlis cevap! Masa cooldown'a girdi.",
+          GAME_HEIGHT / 2 + 222,
+          isCorrect ? "Correct! The process returned to normal." : "Wrong answer! The desk entered cooldown.",
           {
             fontSize: "20px",
             color: isCorrect ? "#86efac" : "#fca5a5",
             fontStyle: "bold"
           }
         ).setOrigin(0.5);
-        const closeButton = this.add.rectangle(GAME_WIDTH / 2 + 424, GAME_HEIGHT / 2 - 202, 42, 42, 0x7f1d1d)
+        const closeButton = this.add.rectangle(GAME_WIDTH / 2 + 516, GAME_HEIGHT / 2 - 252, 42, 42, 0x7f1d1d)
           .setStrokeStyle(3, 0xfca5a5)
           .setInteractive({ useHandCursor: true });
-        const closeText = this.add.text(GAME_WIDTH / 2 + 424, GAME_HEIGHT / 2 - 202, "X", {
+        const closeText = this.add.text(GAME_WIDTH / 2 + 516, GAME_HEIGHT / 2 - 252, "X", {
           fontSize: "22px",
           color: "#fee2e2",
           fontStyle: "bold"
@@ -821,7 +978,7 @@ class OfficeScene extends Phaser.Scene {
       this.quizContainer.add([box, txt]);
     });
 
-    const closeHint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 186, "Bir secenek secerek devam et.", {
+    const closeHint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 246, "Select one option to continue.", {
       fontSize: "14px",
       color: "#94a3b8"
     }).setOrigin(0.5);
@@ -831,7 +988,7 @@ class OfficeScene extends Phaser.Scene {
       const debugAnswer = this.add.text(
         GAME_WIDTH / 2,
         GAME_HEIGHT / 2 + 210,
-        `Test modu: Dogru cevap = ${question.correct + 1}. sik`,
+        `Test mode: correct answer = option ${question.correct + 1}`,
         { fontSize: "16px", color: "#fca5a5" }
       ).setOrigin(0.5);
       this.quizContainer.add(debugAnswer);
@@ -869,7 +1026,6 @@ class OfficeScene extends Phaser.Scene {
       table.exclamation.destroy();
       table.exclamation = null;
     }
-    this.score += 10;
     this.paintTable(tableId);
   }
 
@@ -882,23 +1038,38 @@ class OfficeScene extends Phaser.Scene {
       table.exclamation.destroy();
       table.exclamation = null;
     }
-    this.score -= timeoutFail ? 7 : 5;
     this.paintTable(tableId);
   }
 
   pickQuestionForTable(tableId, bank) {
     if (!bank || bank.length === 0) {
-      return DEFAULT_QUESTIONS[tableId][0];
+      return DEFAULT_QUESTIONS.OT1.easy[0];
     }
     let candidates = bank;
-    const last = this.lastQuestionByTable[tableId];
-    if (bank.length > 1 && typeof last === "number") {
-      candidates = bank.filter((_, idx) => idx !== last);
+    const historyKey = `${tableId}:${this.difficulty}`;
+    const used = this.questionHistoryByTable[historyKey] || [];
+    if (used.length < bank.length) {
+      candidates = bank.filter((_, idx) => !used.includes(idx));
+    } else {
+      return null;
     }
     const selected = Phaser.Utils.Array.GetRandom(candidates);
     const selectedIndex = bank.indexOf(selected);
     this.lastQuestionByTable[tableId] = selectedIndex;
+    this.questionHistoryByTable[historyKey] = [...used, selectedIndex];
     return this.shuffleQuestionOptions(selected);
+  }
+
+  getQuestionBankKey(tableId) {
+    return tableId;
+  }
+
+  resolveQuestionBank(bankKey) {
+    const bank = this.questionBank[bankKey] || DEFAULT_QUESTIONS[bankKey];
+    if (Array.isArray(bank)) return bank;
+    if (bank && Array.isArray(bank[this.difficulty])) return bank[this.difficulty];
+    if (bank && Array.isArray(bank.medium)) return bank.medium;
+    return [];
   }
 
   shuffleQuestionOptions(question) {
@@ -952,15 +1123,34 @@ class OfficeScene extends Phaser.Scene {
       const from = this.tableState.get(flow.from);
       const to = this.tableState.get(flow.to);
       const edge = this.getFlowEndpoints(from, to);
-      this.drawFlowLine(edge.fromX, edge.fromY, edge.toX, edge.toY);
+      this.drawFlowLine(edge.fromX, edge.fromY, edge.toX, edge.toY, flow.type);
     });
   }
 
-  drawFlowLine(fromX, fromY, toX, toY) {
-    this.flowLines.lineStyle(3, 0x3f2d1f, 0.72);
+  drawFlowLine(fromX, fromY, toX, toY, type = "primary") {
+    const color = type === "feedback" ? 0x5eead4 : 0x60a5fa;
+    const texture = type === "feedback" ? 0x134e4a : 0x1e3a8a;
+    this.flowLines.lineStyle(8, 0x020617, 0.5);
     this.flowLines.strokeLineShape(new Phaser.Geom.Line(fromX, fromY, toX, toY));
-    this.flowLines.lineStyle(1, 0xfacc15, 0.42);
+    this.flowLines.lineStyle(5, texture, 0.86);
     this.flowLines.strokeLineShape(new Phaser.Geom.Line(fromX, fromY, toX, toY));
+    this.flowLines.lineStyle(2, color, 0.92);
+    this.flowLines.strokeLineShape(new Phaser.Geom.Line(fromX, fromY, toX, toY));
+    this.drawArrowHead(fromX, fromY, toX, toY, color, 0.95);
+  }
+
+  drawArrowHead(fromX, fromY, toX, toY, color, alpha) {
+    const angle = Phaser.Math.Angle.Between(fromX, fromY, toX, toY);
+    const size = 11;
+    const left = angle + Math.PI - 0.55;
+    const right = angle + Math.PI + 0.55;
+    this.flowLines.fillStyle(color, alpha);
+    this.flowLines.beginPath();
+    this.flowLines.moveTo(toX, toY);
+    this.flowLines.lineTo(toX + Math.cos(left) * size, toY + Math.sin(left) * size);
+    this.flowLines.lineTo(toX + Math.cos(right) * size, toY + Math.sin(right) * size);
+    this.flowLines.closePath();
+    this.flowLines.fillPath();
   }
 
   updateFlowDots(delta) {
@@ -976,12 +1166,11 @@ class OfficeScene extends Phaser.Scene {
       const to = this.tableState.get(p.to);
       const isBlocked = from.status !== "normal" || to.status !== "normal";
       const speed = isBlocked ? 0 : this.getTableRate(p.from) * 0.35;
-      p.t += dt * speed;
-      if (p.t > 1) p.t -= 1;
+      p.t = (p.t + dt * speed) % 1;
       const edge = this.getFlowEndpoints(from, to);
       const x = Phaser.Math.Interpolation.Linear([edge.fromX, edge.toX], p.t);
       const y = Phaser.Math.Interpolation.Linear([edge.fromY, edge.toY], p.t);
-      this.drawPaperPacket(this.flowDots, Math.round(x / 4) * 4, Math.round(y / 4) * 4, isBlocked);
+      this.drawPaperPacket(this.flowDots, x, y, isBlocked);
     });
   }
 
@@ -996,14 +1185,21 @@ class OfficeScene extends Phaser.Scene {
   }
 
   getFlowEndpoints(from, to) {
-    const halfW = 75;
-    const halfH = 29;
     const dx = to.x - from.x;
     const dy = to.y - from.y;
-    const fromX = from.x + Phaser.Math.Clamp(dx, -halfW, halfW);
-    const fromY = from.y + Phaser.Math.Clamp(dy, -halfH, halfH);
-    const toX = to.x - Phaser.Math.Clamp(dx, -halfW, halfW);
-    const toY = to.y - Phaser.Math.Clamp(dy, -halfH, halfH);
+    const halfW = TABLE_W / 2;
+    const halfH = TABLE_H / 2;
+    let fromX = from.x;
+    let fromY = from.y;
+    let toX = to.x;
+    let toY = to.y;
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      fromX = from.x + Math.sign(dx || 1) * halfW;
+      toX = to.x - Math.sign(dx || 1) * halfW;
+    } else {
+      fromY = from.y + Math.sign(dy || 1) * halfH;
+      toY = to.y - Math.sign(dy || 1) * halfH;
+    }
     return { fromX, fromY, toX, toY };
   }
 
@@ -1020,7 +1216,7 @@ class OfficeScene extends Phaser.Scene {
     const issuePenalty = Phaser.Math.Clamp(1 - warnings * 0.14 - cooldown * 0.22, 0.28, 1);
     const healthyBoost = warnings === 0 && cooldown === 0 ? 1.2 : 1;
     const performanceFactor = Phaser.Math.Clamp(normalized * issuePenalty * healthyBoost, 0.25, 1.25);
-    this.ev += dt * (this.plannedRatePerSec * performanceFactor);
+    this.ev += dt * (this.plannedRatePerSec * performanceFactor * 1.3);
     this.ev = Phaser.Math.Clamp(this.ev, 0, 100);
     this.pv = Phaser.Math.Clamp(this.pv, 0, 100);
 
@@ -1030,13 +1226,13 @@ class OfficeScene extends Phaser.Scene {
 
   updateUiTexts() {
     const diff = this.ev - this.pv;
-    let label = "EV = PV (Plana uygun)";
+    let label = "EV = PV (On plan)";
     let color = "#f8fafc";
     if (diff < -4) {
-      label = "EV < PV (Proje geride)";
+      label = "EV < PV (Project behind)";
       color = "#fca5a5";
     } else if (diff > 4) {
-      label = "EV > PV (Proje onde)";
+      label = "EV > PV (Project ahead)";
       color = "#86efac";
     }
     this.evPvText.setText(label);
@@ -1052,11 +1248,16 @@ class OfficeScene extends Phaser.Scene {
   setDifficulty(level) {
     const config = DIFFICULTIES[level];
     if (!config || this.gameOver) return;
+    const changed = this.difficulty !== level;
     this.difficulty = level;
     this.alertEveryMs = config.alertEveryMs;
     this.warningMs = config.warningMs;
     this.cooldownMs = config.cooldownMs;
     this.updateDifficultyMenu();
+    if (changed) {
+      this.restartGame();
+      this.updateDifficultyMenu();
+    }
   }
 
   finishGame() {
@@ -1069,8 +1270,8 @@ class OfficeScene extends Phaser.Scene {
     const title = passed ? "MISSION COMPLETE" : "PROJECT BEHIND PLAN";
     const color = passed ? "#86efac" : "#fca5a5";
     const message = passed
-      ? "Monitoring and control iyi yonetildi."
-      : "EV, PV'nin gerisinde. Daha hizli mudahale gerekli.";
+      ? "Monitoring and control were managed well."
+      : "EV is behind PV. Faster intervention is needed.";
     this.hasGameStarted = false;
     this.showEndPanel(title, message, color);
   }
@@ -1080,10 +1281,12 @@ class OfficeScene extends Phaser.Scene {
     this.remainingMs = this.gameDurationMs;
     this.ev = 0;
     this.pv = 0;
-    this.score = 0;
     this.alertTimer = 0;
     this.currentQuiz = null;
     this.lastQuestionByTable = {};
+    this.questionHistoryByTable = {};
+    this.recentAlertTables = [];
+    this.alertCountByTable = {};
     this.hasGameStarted = false;
     this.isMenuOpen = true;
 
@@ -1099,11 +1302,15 @@ class OfficeScene extends Phaser.Scene {
       this.syncMenuText();
       this.startContainer.setVisible(true);
     }
+    if (this.pauseContainer) {
+      this.pauseContainer.setVisible(false);
+    }
 
     this.tableState.forEach((table) => {
       table.status = "normal";
       table.statusUntil = 0;
       table.quizLocked = false;
+      table.alertCount = 0;
       if (table.exclamation) {
         table.exclamation.destroy();
         table.exclamation = null;
@@ -1131,7 +1338,7 @@ class OfficeScene extends Phaser.Scene {
     const statsText = this.add.text(
       GAME_WIDTH / 2,
       GAME_HEIGHT / 2 + 40,
-      `Final Score: ${this.score}\nEV: ${this.ev.toFixed(1)} | PV: ${this.pv.toFixed(1)}`,
+      `EV: ${this.ev.toFixed(1)} | PV: ${this.pv.toFixed(1)}`,
       { fontSize: "30px", align: "center", color: "#e2e8f0" }
     ).setOrigin(0.5);
     const restartButton = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 135, 230, 54, 0x16a34a)
