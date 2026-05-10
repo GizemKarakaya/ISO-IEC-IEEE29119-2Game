@@ -108,6 +108,7 @@ class OfficeScene extends Phaser.Scene {
     this.walkFrameMs = 0;
     this.walkFrame = 0;
     this.quizAnswered = false;
+    this.quizAutoCloseTimer = null;
     this.usingCustomPlayer = true;
     this.customPlayerReady = false;
   }
@@ -954,6 +955,10 @@ class OfficeScene extends Phaser.Scene {
 
         onSelect(idx);
         this.quizAnswered = true;
+        if (this.quizAutoCloseTimer) {
+          this.quizAutoCloseTimer.remove(false);
+          this.quizAutoCloseTimer = null;
+        }
         const feedback = this.add.text(
           GAME_WIDTH / 2,
           GAME_HEIGHT / 2 + 222,
@@ -964,6 +969,10 @@ class OfficeScene extends Phaser.Scene {
             fontStyle: "bold"
           }
         ).setOrigin(0.5);
+        const closingHint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 252, "Closing in 1 second…", {
+          fontSize: "14px",
+          color: "#94a3b8"
+        }).setOrigin(0.5);
         const closeButton = this.add.rectangle(GAME_WIDTH / 2 + 516, GAME_HEIGHT / 2 - 252, 42, 42, 0x7f1d1d)
           .setStrokeStyle(3, 0xfca5a5)
           .setInteractive({ useHandCursor: true });
@@ -973,12 +982,16 @@ class OfficeScene extends Phaser.Scene {
           fontStyle: "bold"
         }).setOrigin(0.5);
         closeButton.on("pointerdown", () => this.closeQuiz());
-        this.quizContainer.add([feedback, closeButton, closeText]);
+        this.quizContainer.add([feedback, closingHint, closeButton, closeText]);
+        this.quizAutoCloseTimer = this.time.delayedCall(1000, () => {
+          this.quizAutoCloseTimer = null;
+          this.closeQuiz();
+        });
       });
       this.quizContainer.add([box, txt]);
     });
 
-    const closeHint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 246, "Select one option to continue.", {
+    const closeHint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 246, "Choose an option to answer.", {
       fontSize: "14px",
       color: "#94a3b8"
     }).setOrigin(0.5);
@@ -998,6 +1011,10 @@ class OfficeScene extends Phaser.Scene {
   }
 
   closeQuiz() {
+    if (this.quizAutoCloseTimer) {
+      this.quizAutoCloseTimer.remove(false);
+      this.quizAutoCloseTimer = null;
+    }
     this.currentQuiz = null;
     this.quizAnswered = false;
     this.quizContainer.setVisible(false);
@@ -1277,6 +1294,11 @@ class OfficeScene extends Phaser.Scene {
   }
 
   restartGame() {
+    if (this.quizAutoCloseTimer) {
+      this.quizAutoCloseTimer.remove(false);
+      this.quizAutoCloseTimer = null;
+    }
+    this.quizAnswered = false;
     this.gameOver = false;
     this.remainingMs = this.gameDurationMs;
     this.ev = 0;
