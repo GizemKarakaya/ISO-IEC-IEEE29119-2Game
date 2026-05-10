@@ -36,10 +36,10 @@
       {
         "q": "Why should current testing practices be reviewed before creating the specification?",
         "options": [
-          "To remove project-level planning",
+          "To replace project planning completely",
           "To understand existing needs and gaps",
-          "To replace test execution results",
-          "To avoid stakeholder approval"
+          "To produce execution results earlier",
+          "To avoid stakeholder involvement"
         ],
         "correct": 1
       },
@@ -47,9 +47,9 @@
         "q": "Which statement best separates test policy from test practices?",
         "options": [
           "Policy sets goals; practices explain methods",
-          "Policy records defects; practices close defects",
-          "Policy runs tests; practices monitor tests",
-          "Policy stores data; practices report data"
+          "Policy records failures; practices fix failures",
+          "Policy defines test data; practices define risks",
+          "Policy runs tests; practices approve results"
         ],
         "correct": 0
       },
@@ -69,9 +69,9 @@
         "q": "A test policy is written without consulting stakeholders. What is the main weakness?",
         "options": [
           "It may not reflect real organizational needs",
-          "It will automatically become project-specific",
-          "It will replace test monitoring completely",
-          "It may prevent test cases from being written"
+          "It becomes a test execution document",
+          "It replaces project-level monitoring",
+          "It prevents test cases from existing"
         ],
         "correct": 0
       },
@@ -112,12 +112,12 @@
       {
         "q": "What does control mean in this activity?",
         "options": [
-          "Taking action when usage is not aligned",
+          "Creating a new organizational test policy",
           "Designing test cases from test models",
-          "Closing test assets after completion",
-          "Writing one project-specific test plan"
+          "Taking action when usage is not aligned",
+          "Closing all project-level test environments"
         ],
-        "correct": 0
+        "correct": 2
       },
       {
         "q": "Which problem would this activity most directly detect?",
@@ -145,21 +145,21 @@
         "q": "If teams misunderstand the organizational test policy, what is the best response?",
         "options": [
           "Delete the policy from the process",
-          "Provide guidance to improve alignment",
           "Move directly to test completion",
-          "Treat every issue as a defect"
+          "Treat every misunderstanding as a defect",
+          "Provide guidance to improve alignment"
         ],
-        "correct": 1
+        "correct": 3
       },
       {
         "q": "Which result best shows successful monitoring and control?",
         "options": [
+          "Test data is created after closure",
           "Teams follow approved organization-wide guidance",
-          "Test cases are executed without procedures",
           "Stakeholders only receive defect counts",
-          "Test data is created after closure"
+          "Test cases are executed without procedures"
         ],
-        "correct": 0
+        "correct": 1
       }
     ],
     "hard": [
@@ -167,11 +167,11 @@
         "q": "Several teams claim compliance, but their reports use different criteria. What should be examined first?",
         "options": [
           "Whether the test item has passed",
-          "Whether teams apply the specification consistently",
           "Whether the environment was decommissioned",
+          "Whether teams apply the specification consistently",
           "Whether actual results were recorded manually"
         ],
-        "correct": 1
+        "correct": 2
       },
       {
         "q": "Monitoring shows a project cannot follow one practice because of regulatory constraints. What is the strongest response?",
@@ -188,10 +188,10 @@
         "options": [
           "It executes the highest-risk test cases",
           "It designs test models for requirements",
-          "It checks whether organizational rules are applied",
-          "It decides whether each defect is fixed"
+          "It decides whether each defect is fixed",
+          "It checks whether organizational rules are applied"
         ],
-        "correct": 2
+        "correct": 3
       }
     ]
   },
@@ -200,12 +200,12 @@
       {
         "q": "What most naturally triggers this activity?",
         "options": [
-          "Feedback showing the specification needs change",
           "A tester starting manual execution",
           "A single test case producing output",
-          "A project creating temporary data"
+          "Feedback showing the specification needs change",
+          "A project creating temporary test data"
         ],
-        "correct": 0
+        "correct": 2
       },
       {
         "q": "What should happen after approved changes are implemented?",
@@ -220,12 +220,12 @@
       {
         "q": "What is the main aim of updating the specification?",
         "options": [
-          "To keep organizational testing guidance effective",
           "To record every executed test procedure",
-          "To summarize one project?s final result",
-          "To classify one software incident"
+          "To classify one software incident",
+          "To summarize one project's final result",
+          "To keep organizational testing guidance effective"
         ],
-        "correct": 0
+        "correct": 3
       }
     ],
     "medium": [
@@ -243,21 +243,21 @@
         "q": "Who should agree to important updates?",
         "options": [
           "Only the last tester who used it",
+          "The environment owner only",
           "Relevant stakeholders",
-          "Only the development team",
-          "The environment owner only"
+          "Only the development team"
         ],
-        "correct": 1
+        "correct": 2
       },
       {
         "q": "Which update is most appropriate?",
         "options": [
-          "Changing practices after repeated project feedback",
           "Changing policy after one unrelated UI defect",
+          "Removing monitoring because one team passed",
           "Rewriting all tests after completion",
-          "Removing monitoring because one team passed"
+          "Changing practices after repeated project feedback"
         ],
-        "correct": 0
+        "correct": 3
       }
     ],
     "hard": [
@@ -274,22 +274,22 @@
       {
         "q": "An updated practice document is approved, but old versions remain in use. What is the main risk?",
         "options": [
-          "Teams may apply outdated guidance",
           "Test incidents will be fixed faster",
           "Test plans become unnecessary",
+          "Teams may apply outdated guidance",
           "Execution logs become test models"
         ],
-        "correct": 0
+        "correct": 2
       },
       {
         "q": "Why does updating support a cyclic model?",
         "options": [
           "Dynamic results replace organizational policy",
-          "Feedback improves organization-level rules",
           "Completion always happens before planning",
-          "Execution removes the need for monitoring"
+          "Execution removes the need for monitoring",
+          "Feedback improves organization-level rules"
         ],
-        "correct": 1
+        "correct": 3
       }
     ]
   },
@@ -308,10 +308,10 @@
       {
         "q": "Which item is most closely related to this process?",
         "options": [
-          "Test execution log",
-          "Test incident report",
+          "Test model specification",
+          "Organizational test practices",
           "Test plan",
-          "Actual result"
+          "Test completion report"
         ],
         "correct": 2
       },
@@ -319,9 +319,9 @@
         "q": "Which input is especially important for risk-based planning?",
         "options": [
           "Product and project risks",
-          "Final defect closure notes",
-          "Archived test assets",
-          "Completed execution logs"
+          "Test coverage items",
+          "Test environment readiness",
+          "Actual results"
         ],
         "correct": 0
       }
@@ -331,29 +331,29 @@
         "q": "How are product risks used in planning?",
         "options": [
           "They help prioritize testing effort",
-          "They replace test cases",
-          "They close incidents automatically",
-          "They define stakeholder roles only"
+          "They generate test data automatically",
+          "They replace the need for test models",
+          "They define organizational test policy"
         ],
         "correct": 0
       },
       {
         "q": "Which statement best describes the relationship between strategy and plan?",
         "options": [
-          "Strategy is unrelated to planning",
+          "Strategy details test cases; plan executes them",
           "Strategy guides the approach within planning",
-          "Strategy is written only after completion",
-          "Strategy replaces monitoring and control"
+          "Strategy is organizational; plan is dynamic",
+          "Strategy defines models; plan defines incidents"
         ],
         "correct": 1
       },
       {
         "q": "Why is planning often iterative?",
         "options": [
-          "Test execution logs must be deleted",
+          "Test cases must be designed before planning",
           "New risks or constraints may appear",
-          "Incidents cannot exist during planning",
-          "Test data is never stable"
+          "Test models must always change daily",
+          "Test execution removes planning decisions"
         ],
         "correct": 1
       }
@@ -363,31 +363,31 @@
         "q": "A new security risk appears after the test plan is approved. What should the team do?",
         "options": [
           "Revisit risk analysis and adjust the plan",
-          "Ignore it until the completion report",
-          "Treat it only as an environment issue",
-          "Remove monitoring from the project"
+          "Handle it only after test completion",
+          "Treat it as an environment issue only",
+          "Replace the test plan with a defect report"
         ],
         "correct": 0
       },
       {
         "q": "A team has limited time but many features. Which planning decision is strongest?",
         "options": [
-          "Test all features equally with no priority",
+          "Skip test design and run only informal tests",
+          "Test all features equally until time ends",
           "Focus effort on higher-risk areas first",
-          "Delay risk analysis until execution ends",
-          "Replace the test plan with incident reports"
+          "Omit environment preparation to save time"
         ],
-        "correct": 1
+        "correct": 2
       },
       {
         "q": "A performance test needs special tools and trained staff. Where should this be handled?",
         "options": [
-          "In incident reporting after failure",
-          "In strategy and planning before execution",
-          "In completion after assets are archived",
-          "In organizational update only"
+          "During incident reporting after failure",
+          "During test completion after archiving",
+          "During organizational specification update only",
+          "During strategy and planning before execution"
         ],
-        "correct": 1
+        "correct": 3
       }
     ]
   },
@@ -397,95 +397,95 @@
         "q": "What does this process mainly track?",
         "options": [
           "Progress, deviations, risks, and actions",
-          "Test data values only",
-          "Organization-wide policy creation",
-          "Archived test assets only"
+          "Test case preconditions and inputs",
+          "Environmental hardware specifications",
+          "Test basis and test models"
         ],
         "correct": 0
       },
       {
         "q": "Which document is linked to reporting current test progress?",
         "options": [
+          "Test execution log",
+          "Test completion report",
           "Test status report",
-          "Test model specification",
-          "Organizational test policy",
-          "Test completion report only"
+          "Organizational test policy"
         ],
-        "correct": 0
+        "correct": 2
       },
       {
         "q": "What does control involve?",
         "options": [
-          "Taking corrective action when needed",
-          "Creating organizational test practices",
-          "Designing expected results only",
-          "Closing every test environment"
+          "Deriving test cases from test models",
+          "Establishing the test environment",
+          "Recording actual results only",
+          "Taking corrective action when needed"
         ],
-        "correct": 0
+        "correct": 3
       }
     ],
     "medium": [
       {
         "q": "What is the key difference between monitoring and completion?",
         "options": [
-          "Monitoring happens during testing; completion closes testing",
-          "Monitoring archives assets; completion tracks progress",
           "Monitoring designs tests; completion executes tests",
-          "Monitoring creates policy; completion approves policy"
+          "Monitoring happens during testing; completion closes testing",
+          "Monitoring manages data; completion manages risks",
+          "Monitoring approves policy; completion creates policy"
         ],
-        "correct": 0
+        "correct": 1
       },
       {
         "q": "Why are deviations from the test plan important?",
         "options": [
           "They may indicate schedule, risk, or quality problems",
-          "They prove all defects are resolved",
-          "They always mean the plan was unnecessary",
-          "They only affect organizational documents"
+          "They always invalidate all test models",
+          "They automatically close unresolved incidents",
+          "They prove that all test cases are wrong"
         ],
         "correct": 0
       },
       {
         "q": "Which situation belongs most clearly to monitoring and control?",
         "options": [
-          "A test manager notices high-risk tests are delayed",
-          "A tester creates a state transition model",
-          "A stakeholder approves a test policy",
-          "A team archives reusable test cases"
+          "A tester executes a test procedure",
+          "A stakeholder approves a policy",
+          "A manager notices high-risk tests are delayed",
+          "An administrator sets up test servers"
         ],
-        "correct": 0
+        "correct": 2
       }
     ],
     "hard": [
       {
         "q": "High-risk tests are still not executed near the deadline. What is the best control action?",
         "options": [
-          "Reprioritize tests and adjust resources",
           "Wait until completion to mention it",
-          "Close the environment immediately",
-          "Report every missing test as a defect"
+          "Reprioritize tests and adjust resources",
+          "Redesign all test models immediately",
+          "Report every missing test as an incident"
         ],
-        "correct": 0
+        "correct": 1
       },
       {
         "q": "Incident trends show repeated failures in one feature. How can monitoring use this?",
         "options": [
           "Reassess risk and adjust testing focus",
-          "Remove expected results from tests",
-          "Stop recording execution evidence",
-          "Treat the trend as a policy update"
+          "Delete the failed test cases from scope",
+          "Treat the trend as a policy approval",
+          "Stop recording execution evidence"
         ],
         "correct": 0
       },
       {
         "q": "Why is monitoring essential in risk-based testing?",
         "options": [
+          "It guarantees all risks are removed",
+          "It converts project risks into product risks",
           "It keeps risk priorities visible during testing",
-          "It replaces initial risk analysis completely",
-          "It prevents incidents from being reported",
-          "It removes stakeholder communication"
+          "It replaces initial risk analysis completely"
         ],
-        "correct": 0
+        "correct": 2
       }
     ]
   },
@@ -494,32 +494,32 @@
       {
         "q": "What is the main purpose of Test Completion?",
         "options": [
-          "To close testing and communicate results",
           "To create test models before design",
+          "To close testing and communicate results",
           "To monitor daily project progress",
           "To prepare initial test data"
-        ],
-        "correct": 0
-      },
-      {
-        "q": "Which document summarizes completed testing?",
-        "options": [
-          "Test status report",
-          "Test completion report",
-          "Test model specification",
-          "Test data requirement"
         ],
         "correct": 1
       },
       {
+        "q": "Which document summarizes completed testing?",
+        "options": [
+          "Test execution log",
+          "Test model specification",
+          "Test completion report",
+          "Organizational test policy"
+        ],
+        "correct": 2
+      },
+      {
         "q": "What should happen to useful test assets?",
         "options": [
-          "They should be preserved for later use",
-          "They should be deleted after execution",
           "They should be treated as incidents",
-          "They should replace test strategy"
+          "They should replace test strategy",
+          "They should be deleted after execution",
+          "They should be preserved for later use"
         ],
-        "correct": 0
+        "correct": 3
       }
     ],
     "medium": [
@@ -527,31 +527,31 @@
         "q": "Why are stakeholders informed during completion?",
         "options": [
           "They need outcome and remaining risk information",
-          "They need to create every test case again",
-          "They must execute all failed tests personally",
-          "They replace the environment owner"
+          "They must create every test case again",
+          "They replace the environment owner",
+          "They approve every execution log manually"
         ],
         "correct": 0
       },
       {
         "q": "How is completion different from simply stopping tests?",
         "options": [
+          "It triggers test design again",
           "It includes reporting, closure, and asset handling",
-          "It means no evidence is needed",
-          "It happens before planning",
+          "It happens before test planning",
           "It only pauses execution temporarily"
         ],
-        "correct": 0
+        "correct": 1
       },
       {
         "q": "Why should the environment be left in a satisfactory condition?",
         "options": [
-          "It supports safe reuse or shutdown",
           "It hides unresolved incidents",
           "It removes final reporting needs",
+          "It supports safe reuse or shutdown",
           "It converts actual results into expected results"
         ],
-        "correct": 0
+        "correct": 2
       }
     ],
     "hard": [
@@ -568,22 +568,22 @@
       {
         "q": "The team finishes execution but never communicates results. Which responsibility is missed?",
         "options": [
-          "Deriving test cases",
+          "Establishing environment readiness",
           "Informing relevant stakeholders",
-          "Preparing the test basis",
-          "Monitoring organizational policy"
+          "Defining test coverage items",
+          "Updating the test strategy"
         ],
         "correct": 1
       },
       {
         "q": "Which situation best fits Test Completion?",
         "options": [
-          "A team summarizes outcomes and archives reusable tests",
-          "A tester observes actual results during execution",
+          "A tester reports a defect during execution",
           "A manager identifies risks before planning",
-          "An organization approves a new policy"
+          "A team summarizes outcomes and archives reusable tests",
+          "A developer prepares test data for retesting"
         ],
-        "correct": 0
+        "correct": 2
       }
     ]
   },
@@ -612,12 +612,12 @@
       {
         "q": "What is a test procedure?",
         "options": [
-          "Ordered steps or test cases for execution",
-          "Organization-wide testing principles",
           "A report of incident status",
+          "Organization-wide testing principles",
+          "Ordered steps or test cases for execution",
           "A list of project management risks"
         ],
-        "correct": 0
+        "correct": 2
       }
     ],
     "medium": [
@@ -625,11 +625,11 @@
         "q": "What replaced test conditions as the main design concept in the 2021 edition?",
         "options": [
           "Test incidents",
-          "Test models",
           "Test completion reports",
+          "Test models",
           "Test status reports"
         ],
-        "correct": 1
+        "correct": 2
       },
       {
         "q": "How do test models support design?",
@@ -644,12 +644,12 @@
       {
         "q": "Which statement best separates design from execution?",
         "options": [
-          "Design creates tests; execution runs them",
-          "Design reports incidents; execution approves policy",
           "Design closes assets; execution updates practices",
-          "Design monitors progress; execution plans risks"
+          "Design reports incidents; execution approves policy",
+          "Design monitors progress; execution plans risks",
+          "Design creates tests; execution runs them"
         ],
-        "correct": 0
+        "correct": 3
       }
     ],
     "hard": [
@@ -666,22 +666,22 @@
       {
         "q": "A requirement changes, but related test cases cannot be found. What weakness does this show?",
         "options": [
-          "Poor traceability",
           "Poor incident closure",
+          "Poor traceability",
           "Poor environment shutdown",
           "Poor stakeholder communication only"
         ],
-        "correct": 0
+        "correct": 1
       },
       {
         "q": "Why can weak test design damage execution quality?",
         "options": [
-          "Execution may produce unclear or incomplete evidence",
-          "Execution will always find more defects",
           "Execution will replace the test plan",
-          "Execution removes expected results"
+          "Execution will always find more defects",
+          "Execution may produce unclear or incomplete evidence",
+          "Execution removes the need for expected results"
         ],
-        "correct": 0
+        "correct": 2
       }
     ]
   },
@@ -700,12 +700,12 @@
       {
         "q": "What is test data?",
         "options": [
-          "Data used to support test case execution",
           "A record of final stakeholder decisions",
+          "Data used to support test case execution",
           "A summary of test completion results",
           "A policy for organization-wide testing"
         ],
-        "correct": 0
+        "correct": 1
       },
       {
         "q": "What is a test environment?",
@@ -722,30 +722,30 @@
       {
         "q": "Why must the environment be ready before execution?",
         "options": [
-          "Reliable results need a controlled setup",
           "Incident reports cannot exist otherwise",
           "Planning must happen after execution",
+          "Reliable results need a controlled setup",
           "Organizational policy is created there"
         ],
-        "correct": 0
+        "correct": 2
       },
       {
         "q": "How can incorrect test data affect testing?",
         "options": [
-          "It can create misleading failures",
           "It always confirms a real defect",
           "It replaces expected results",
-          "It completes the test process"
+          "It completes the test process",
+          "It can create misleading failures"
         ],
-        "correct": 0
+        "correct": 3
       },
       {
         "q": "Which pair is correctly matched?",
         "options": [
-          "Environment: systems and tools, Data: input values",
-          "Environment: defect status, Data: stakeholder policy",
-          "Environment: completion summary, Data: risk register",
-          "Environment: test strategy, Data: organizational rules"
+          "Environment: systems and tools; Data: input values",
+          "Environment: defect status; Data: stakeholder policy",
+          "Environment: completion summary; Data: risk register",
+          "Environment: test strategy; Data: organizational rules"
         ],
         "correct": 0
       }
@@ -754,32 +754,32 @@
       {
         "q": "A test fails because the database was seeded incorrectly. Which process is most responsible?",
         "options": [
-          "Test Environment and Data Management",
           "Test Completion",
+          "Test Environment and Data Management",
           "Organizational Specification Update",
           "Test Strategy and Planning only"
         ],
-        "correct": 0
+        "correct": 1
       },
       {
         "q": "The same test passes on one machine and fails on another. What is the likely issue?",
         "options": [
-          "Environment configuration inconsistency",
           "Stakeholder approval timing",
           "Test policy communication",
-          "Completion report formatting"
+          "Completion report formatting",
+          "Environment configuration inconsistency"
         ],
-        "correct": 0
+        "correct": 3
       },
       {
         "q": "Why can unstable environments make incident reports unreliable?",
         "options": [
-          "The failure cause may be outside the test item",
           "Incident reports cannot include environment details",
-          "Environment issues always prove defects",
+          "Environment issues always prove software defects",
+          "The failure cause may be outside the test item",
           "Test execution does not depend on setup"
         ],
-        "correct": 0
+        "correct": 2
       }
     ]
   },
@@ -789,43 +789,43 @@
         "q": "What happens in Test Execution?",
         "options": [
           "Organizational practices are approved",
-          "Project risks are first identified",
           "Procedures are run and results recorded",
+          "Project risks are first identified",
           "Final assets are archived"
         ],
-        "correct": 2
+        "correct": 1
       },
       {
         "q": "What are actual results?",
         "options": [
           "Results predicted before execution",
-          "Results observed during execution",
           "Risks selected during planning",
+          "Results observed during execution",
           "Rules defined at organization level"
         ],
-        "correct": 1
+        "correct": 2
       },
       {
         "q": "What are expected results?",
         "options": [
+          "Final stakeholder approval notes",
           "Predicted behavior under defined conditions",
           "Feedback from organizational monitoring",
-          "Final stakeholder approval notes",
           "Environment closure evidence"
         ],
-        "correct": 0
+        "correct": 1
       }
     ],
     "medium": [
       {
         "q": "Which comparison determines whether a test passed or failed?",
         "options": [
-          "Actual results against expected results",
           "Test policy against test practices",
           "Project risks against product risks",
-          "Completion report against status report"
+          "Completion report against status report",
+          "Actual results against expected results"
         ],
-        "correct": 0
+        "correct": 3
       },
       {
         "q": "Why should execution results be recorded?",
@@ -840,34 +840,34 @@
       {
         "q": "How does execution depend on design?",
         "options": [
-          "It uses designed test cases and procedures",
           "It creates organization-wide practices",
           "It approves test strategy changes",
+          "It uses designed test cases and procedures",
           "It closes the test environment"
         ],
-        "correct": 0
+        "correct": 2
       }
     ],
     "hard": [
       {
         "q": "Actual output differs from expected output. What should happen next?",
         "options": [
-          "Record the deviation and consider incident reporting",
           "Delete the test case from the suite",
+          "Record the deviation and consider incident reporting",
           "Ignore the result until completion",
           "Update organizational practices immediately"
         ],
-        "correct": 0
+        "correct": 1
       },
       {
         "q": "A tester runs tests without recording outcomes. What is the main impact?",
         "options": [
-          "There is weak evidence for follow-up decisions",
           "All tests become automatically passed",
           "Incident reporting becomes more detailed",
-          "Planning becomes unnecessary"
+          "Planning becomes unnecessary",
+          "There is weak evidence for follow-up decisions"
         ],
-        "correct": 0
+        "correct": 3
       },
       {
         "q": "Why is executing tests before environment readiness risky?",
@@ -896,22 +896,22 @@
       {
         "q": "What is an incident report?",
         "options": [
-          "A record of occurrence, nature, and status",
           "A plan for testing scope and resources",
           "A model used to derive test cases",
+          "A record of occurrence, nature, and status",
           "A summary used only after closure"
         ],
-        "correct": 0
+        "correct": 2
       },
       {
         "q": "When should an incident be reported?",
         "options": [
-          "When an unexpected issue needs follow-up",
           "When every test has passed successfully",
           "Before a test item exists",
-          "Only after policy changes"
+          "Only after policy changes",
+          "When an unexpected issue needs follow-up"
         ],
-        "correct": 0
+        "correct": 3
       }
     ],
     "medium": [
@@ -928,22 +928,22 @@
       {
         "q": "What should an incident report help stakeholders understand?",
         "options": [
+          "Which test strategy was planned first",
           "What happened, its nature, and current status",
           "Which organizational policy was approved",
-          "Which test strategy was planned first",
           "Why all assets were archived"
         ],
-        "correct": 0
+        "correct": 1
       },
       {
         "q": "How can incident reporting support monitoring and control?",
         "options": [
-          "Incidents can reveal risks or deviations needing action",
           "Incidents replace all progress tracking",
           "Incidents close environments automatically",
+          "Incidents can reveal risks or deviations needing action",
           "Incidents remove status reports"
         ],
-        "correct": 0
+        "correct": 2
       }
     ],
     "hard": [
@@ -960,22 +960,22 @@
       {
         "q": "A reported issue is later caused by invalid test data. Why does the distinction matter?",
         "options": [
-          "Correct cause determines the right corrective action",
           "All failures must be software defects anyway",
           "Incident reports should exclude investigation details",
-          "Test data issues belong only to completion"
+          "Test data issues belong only to completion",
+          "Correct cause determines the right corrective action"
         ],
-        "correct": 0
+        "correct": 3
       },
       {
         "q": "Which scenario best fits Test Incident Reporting?",
         "options": [
-          "A tester documents a failed login test with status and details",
-          "A manager defines the organization?s test policy",
+          "A manager defines the organization's test policy",
           "A team identifies staffing needs before execution",
-          "A project archives reusable test cases after closure"
+          "A project archives reusable test cases after closure",
+          "A tester documents a failed login test with status and details"
         ],
-        "correct": 0
+        "correct": 3
       }
     ]
   }

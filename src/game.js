@@ -109,14 +109,10 @@ class OfficeScene extends Phaser.Scene {
     this.walkFrame = 0;
     this.quizAnswered = false;
     this.quizAutoCloseTimer = null;
-    this.usingCustomPlayer = true;
-    this.customPlayerReady = false;
   }
 
   preload() {
     this.load.json("questions", "./src/questions.json?v=20260509-questions");
-    this.load.image("player-custom", "./src/player-custom.png?v=20260509-main-character");
-    this.load.image("player-custom-walk", "./src/player-custom.png?v=20260509-main-character");
   }
 
   create() {
@@ -141,7 +137,6 @@ class OfficeScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-THREE", () => this.setDifficulty("hard"));
     this.input.keyboard.on("keydown-ENTER", () => this.startGame());
     this.input.keyboard.on("keydown-SPACE", () => this.startGame());
-    this.input.keyboard.on("keydown-K", () => this.togglePlayerModel());
     this.input.keyboard.on("keydown-ESC", () => this.handleEscAction());
     this.input.keyboard.on("keydown-W", () => this.closeAnsweredQuiz());
     this.input.keyboard.on("keydown-A", () => this.closeAnsweredQuiz());
@@ -483,7 +478,7 @@ class OfficeScene extends Phaser.Scene {
       }
     );
 
-    const closeHint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 185, "Close: H or ESC", {
+    const closeHint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 185, "Close: H", {
       fontSize: "18px",
       color: "#93c5fd"
     }).setOrigin(0.5);
@@ -682,7 +677,6 @@ class OfficeScene extends Phaser.Scene {
 
   handleEscAction() {
     if (this.isTutorialOpen) {
-      this.toggleTutorial(false);
       return;
     }
     if (this.currentQuiz || this.gameOver) return;
@@ -698,24 +692,12 @@ class OfficeScene extends Phaser.Scene {
   }
 
   createPlayer() {
-    this.customPlayerReady = this.textures.exists("player-custom");
-    this.usingCustomPlayer = this.customPlayerReady;
-    this.player = this.add.image(1100, 624, this.usingCustomPlayer ? "player-custom" : "player-idle")
-      .setScale(this.usingCustomPlayer ? 0.062 : 1.35)
-      .setOrigin(0.5, this.usingCustomPlayer ? 0.72 : 0.5)
+    this.player = this.add.image(1100, 624, "player-idle")
+      .setScale(1.35)
+      .setDisplaySize(43, 43)
+      .setOrigin(0.5, 0.5)
       .setDepth(50);
     this.cursors = this.input.keyboard.addKeys("W,A,S,D");
-  }
-
-  togglePlayerModel() {
-    if (!this.player) return;
-    if (!this.textures.exists("player-custom")) return;
-    this.usingCustomPlayer = !this.usingCustomPlayer;
-    if (this.usingCustomPlayer) {
-      this.player.setTexture("player-custom").setScale(0.062).setOrigin(0.5, 0.72);
-    } else {
-      this.player.setTexture("player-idle").setScale(1.35).setDisplaySize(43, 43).setOrigin(0.5, 0.5);
-    }
   }
 
   update(_, delta) {
@@ -777,18 +759,10 @@ class OfficeScene extends Phaser.Scene {
         this.walkFrame = 1 - this.walkFrame;
         this.walkFrameMs = 0;
       }
-      if (!this.usingCustomPlayer) {
-        this.player.setTexture(this.walkFrame === 0 ? "player-walk-1" : "player-walk-2");
-      } else {
-        this.player.setTexture("player-custom").setScale(0.062).setOrigin(0.5, 0.72);
-      }
+      this.player.setTexture(this.walkFrame === 0 ? "player-walk-1" : "player-walk-2");
     } else {
       this.walkFrameMs = 0;
-      if (!this.usingCustomPlayer) {
-        this.player.setTexture("player-idle");
-      } else {
-        this.player.setTexture("player-custom").setScale(0.062).setOrigin(0.5, 0.72);
-      }
+      this.player.setTexture("player-idle");
     }
 
     this.player.x = Phaser.Math.Clamp(this.player.x, OFFICE.x + 18, OFFICE.x + OFFICE.width - 18);
@@ -917,7 +891,8 @@ class OfficeScene extends Phaser.Scene {
       const box = this.add.rectangle(GAME_WIDTH / 2, y, 1000, 64, 0x1e293b)
         .setStrokeStyle(2, 0x64748b)
         .setInteractive({ useHandCursor: true });
-      const txt = this.add.text(GAME_WIDTH / 2 - 476, y, `${idx + 1}. ${option}`, {
+      const optionLabel = String.fromCharCode(65 + idx);
+      const txt = this.add.text(GAME_WIDTH / 2 - 476, y, `${optionLabel}. ${option}`, {
         fontSize: "16px",
         color: "#e2e8f0",
         align: "left",
@@ -1001,7 +976,7 @@ class OfficeScene extends Phaser.Scene {
       const debugAnswer = this.add.text(
         GAME_WIDTH / 2,
         GAME_HEIGHT / 2 + 210,
-        `Test mode: correct answer = option ${question.correct + 1}`,
+        `Test mode: correct answer = option ${String.fromCharCode(65 + question.correct)}`,
         { fontSize: "16px", color: "#fca5a5" }
       ).setOrigin(0.5);
       this.quizContainer.add(debugAnswer);
