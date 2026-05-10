@@ -1,5 +1,7 @@
 const GAME_WIDTH = 1280;
 const GAME_HEIGHT = 720;
+/** Planned value PV reaches 100 over this duration (matches README EV/PV section). */
+const GAME_DURATION_MS = 90000;
 
 const COLORS = {
   bg: 0x07111f,
@@ -95,7 +97,7 @@ class OfficeScene extends Phaser.Scene {
     this.isMenuOpen = false;
     this.score = 0;
     this.questionBank = DEFAULT_QUESTIONS;
-    this.gameDurationMs = 90000;
+    this.gameDurationMs = GAME_DURATION_MS;
     this.remainingMs = this.gameDurationMs;
     this.plannedRatePerSec = 100 / (this.gameDurationMs / 1000);
     this.hasGameStarted = false;
@@ -408,7 +410,7 @@ class OfficeScene extends Phaser.Scene {
       fontSize: "15px",
       color: "#cbd5e1"
     }).setDepth(101);
-    this.timeText = this.add.text(245, 18, "Time 90s", {
+    this.timeText = this.add.text(245, 18, `Time ${Math.round(this.gameDurationMs / 1000)}s`, {
       fontFamily: FONT,
       fontSize: "15px",
       color: "#fde68a"
@@ -1018,6 +1020,8 @@ class OfficeScene extends Phaser.Scene {
       table.exclamation.destroy();
       table.exclamation = null;
     }
+    this.score += 10;
+    this.ev = Phaser.Math.Clamp(this.ev + 2, 0, 100);
     this.paintTable(tableId);
   }
 
@@ -1030,6 +1034,9 @@ class OfficeScene extends Phaser.Scene {
       table.exclamation.destroy();
       table.exclamation = null;
     }
+    this.score -= 5;
+    if (timeoutFail) this.score -= 7;
+    this.ev = Phaser.Math.Clamp(this.ev - 4.5, 0, 100);
     this.paintTable(tableId);
   }
 
@@ -1205,10 +1212,11 @@ class OfficeScene extends Phaser.Scene {
     const normalized = totalRate / TABLES.length;
     const warnings = Array.from(this.tableState.values()).filter((t) => t.status === "warning").length;
     const cooldown = Array.from(this.tableState.values()).filter((t) => t.status === "cooldown").length;
-    const issuePenalty = Phaser.Math.Clamp(1 - warnings * 0.14 - cooldown * 0.22, 0.28, 1);
-    const healthyBoost = warnings === 0 && cooldown === 0 ? 1.2 : 1;
-    const performanceFactor = Phaser.Math.Clamp(normalized * issuePenalty * healthyBoost, 0.25, 1.25);
-    this.ev += dt * (this.plannedRatePerSec * performanceFactor * 1.3);
+    const issuePenalty = Phaser.Math.Clamp(1 - warnings * 0.17 - cooldown * 0.27, 0.22, 1);
+    const healthyBoost = warnings === 0 && cooldown === 0 ? 1.06 : 1;
+    const performanceFactor = Phaser.Math.Clamp(normalized * issuePenalty * healthyBoost, 0.22, 1.1);
+    /* EV grows at PV's planned pace × desk/risk effectiveness — no hidden EV inflation. */
+    this.ev += dt * (this.plannedRatePerSec * performanceFactor);
     this.ev = Phaser.Math.Clamp(this.ev, 0, 100);
     this.pv = Phaser.Math.Clamp(this.pv, 0, 100);
 
@@ -1257,8 +1265,11 @@ class OfficeScene extends Phaser.Scene {
     this.remainingMs = 0;
     this.currentQuiz = null;
     this.quizContainer.setVisible(false);
+    if (this.statusText) {
+      this.statusText.setText("Finished");
+    }
     const diff = this.ev - this.pv;
-    const passed = diff >= -6;
+    const passed = diff >= -5;
     const title = passed ? "MISSION COMPLETE" : "PROJECT BEHIND PLAN";
     const color = passed ? "#86efac" : "#fca5a5";
     const message = passed
@@ -1278,6 +1289,7 @@ class OfficeScene extends Phaser.Scene {
     this.remainingMs = this.gameDurationMs;
     this.ev = 0;
     this.pv = 0;
+    this.score = 0;
     this.alertTimer = 0;
     this.currentQuiz = null;
     this.lastQuestionByTable = {};
@@ -1334,14 +1346,20 @@ class OfficeScene extends Phaser.Scene {
     }).setOrigin(0.5);
     const statsText = this.add.text(
       GAME_WIDTH / 2,
-      GAME_HEIGHT / 2 + 40,
+      GAME_HEIGHT / 2 + 32,
       `EV: ${this.ev.toFixed(1)} | PV: ${this.pv.toFixed(1)}`,
-      { fontSize: "30px", align: "center", color: "#e2e8f0" }
+      { fontSize: "28px", align: "center", color: "#e2e8f0" }
     ).setOrigin(0.5);
-    const restartButton = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 135, 230, 54, 0x16a34a)
+    const scoreLine = this.add.text(
+      GAME_WIDTH / 2,
+      GAME_HEIGHT / 2 + 68,
+      `Score: ${this.score}`,
+      { fontSize: "20px", align: "center", color: "#94a3b8" }
+    ).setOrigin(0.5);
+    const restartButton = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 142, 230, 54, 0x16a34a)
       .setStrokeStyle(3, 0x86efac)
       .setInteractive({ useHandCursor: true });
-    const restartText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 135, "PLAY AGAIN", {
+    const restartText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 142, "PLAY AGAIN", {
       fontFamily: FONT,
       fontSize: "22px",
       color: "#ecfdf5",
@@ -1350,7 +1368,7 @@ class OfficeScene extends Phaser.Scene {
     restartButton.on("pointerover", () => restartButton.setFillStyle(0x15803d));
     restartButton.on("pointerout", () => restartButton.setFillStyle(0x16a34a));
     restartButton.on("pointerdown", () => this.restartGame());
-    this.endContainer.add([bg, titleText, messageText, statsText, restartButton, restartText]);
+    this.endContainer.add([bg, titleText, messageText, statsText, scoreLine, restartButton, restartText]);
     this.endContainer.setVisible(true);
   }
 
