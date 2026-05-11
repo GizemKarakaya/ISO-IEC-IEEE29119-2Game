@@ -25,6 +25,9 @@ const TABLE_LABEL_FONT = '"Segoe UI", Arial, sans-serif';
 const OFFICE = { x: 24, y: 78, width: 1232, height: 612 };
 const TABLE_W = 176;
 const TABLE_H = 72;
+const TABLE_INTERACT_PAD_X = 64;
+const TABLE_INTERACT_PAD_Y = 38;
+const EV_RATE_MULTIPLIER = 1.25;
 const LAYERS = [
   { title: "Organizational Layer", y: 98, h: 134, wall: 0x2f4a3f, floor: 0x8b6f47, floorAlt: 0x7b623f, trim: 0x38bdf8 },
   { title: "Test Management Layer", y: 292, h: 144, wall: 0x4a405d, floor: 0x9a7650, floorAlt: 0x856645, trim: 0xa78bfa },
@@ -95,7 +98,6 @@ class OfficeScene extends Phaser.Scene {
     this.currentQuiz = null;
     this.isTutorialOpen = false;
     this.isMenuOpen = false;
-    this.score = 0;
     this.questionBank = DEFAULT_QUESTIONS;
     this.gameDurationMs = GAME_DURATION_MS;
     this.remainingMs = this.gameDurationMs;
@@ -501,11 +503,6 @@ class OfficeScene extends Phaser.Scene {
       color: "#e2e8f0",
       fontStyle: "bold"
     }).setOrigin(0.5);
-    const subtitle = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 238, "Test Office", {
-      fontFamily: FONT,
-      fontSize: "18px",
-      color: "#93c5fd"
-    }).setOrigin(0.5);
     const body = this.add.text(
       GAME_WIDTH / 2 - 460,
       GAME_HEIGHT / 2 - 205,
@@ -518,7 +515,7 @@ class OfficeScene extends Phaser.Scene {
         "- After the first warning, process desks may raise warnings every 10 seconds.",
         "- Walk near a warning desk and press E to answer a process question.",
         "- The selected difficulty controls which question set appears.",
-        "- Correct answers recover EV; wrong answers put the desk in cooldown.",
+        "- Correct answers clear warnings; wrong answers put the desk in cooldown.",
         "- H opens help. ESC opens the pause menu.",
         ""
       ].join("\n"),      { fontSize: "15px", color: "#dbeafe", lineSpacing: 4, wordWrap: { width: 920, useAdvancedWrap: true } }
@@ -580,7 +577,6 @@ class OfficeScene extends Phaser.Scene {
       shade,
       bg,
       title,
-      subtitle,
       body,
       legendGraphics,
       primaryLegend,
@@ -683,8 +679,6 @@ class OfficeScene extends Phaser.Scene {
     }
     if (this.currentQuiz || this.gameOver) return;
     if (!this.hasGameStarted) {
-      this.isMenuOpen = !this.isMenuOpen;
-      if (this.startContainer) this.startContainer.setVisible(this.isMenuOpen);
       return;
     }
     this.isMenuOpen = !this.isMenuOpen;
@@ -843,7 +837,7 @@ class OfficeScene extends Phaser.Scene {
 
   tryInteract() {
     if (this.currentQuiz || this.isTutorialOpen) return;
-    const nearby = this.getClosestTable(85);
+    const nearby = this.getClosestTable();
     if (!nearby) return;
     const state = this.tableState.get(nearby.id);
     if (state.status === "warning") {
@@ -869,7 +863,7 @@ class OfficeScene extends Phaser.Scene {
       if (index === question.correct) {
         this.applyCorrectAnswer(tableId);
       } else {
-        this.applyWrongAnswer(tableId, false);
+        this.applyWrongAnswer(tableId);
       }
     });
   }
@@ -885,14 +879,25 @@ class OfficeScene extends Phaser.Scene {
       wordWrap: { width: 1020, useAdvancedWrap: true },
       lineSpacing: 4
     }).setOrigin(0.5);
-    this.quizContainer.add([bg, qText]);
+    const closeButton = this.add.rectangle(GAME_WIDTH / 2 + 516, GAME_HEIGHT / 2 - 252, 42, 42, 0x7f1d1d)
+      .setStrokeStyle(3, 0xfca5a5)
+      .setInteractive({ useHandCursor: true });
+    const closeText = this.add.text(GAME_WIDTH / 2 + 516, GAME_HEIGHT / 2 - 252, "X", {
+      fontSize: "22px",
+      color: "#fee2e2",
+      fontStyle: "bold"
+    }).setOrigin(0.5);
+    closeButton.on("pointerdown", () => this.closeQuiz(true));
+    this.quizContainer.add([bg, qText, closeButton, closeText]);
 
     let isAnswered = false;
+    const optionBoxes = [];
     question.options.forEach((option, idx) => {
       const y = GAME_HEIGHT / 2 - 120 + idx * 82;
       const box = this.add.rectangle(GAME_WIDTH / 2, y, 1000, 64, 0x1e293b)
         .setStrokeStyle(2, 0x64748b)
         .setInteractive({ useHandCursor: true });
+      optionBoxes.push(box);
       const optionLabel = String.fromCharCode(65 + idx);
       const txt = this.add.text(GAME_WIDTH / 2 - 476, y, `${optionLabel}. ${option}`, {
         fontSize: "16px",
@@ -902,7 +907,9 @@ class OfficeScene extends Phaser.Scene {
         lineSpacing: 1
       }).setOrigin(0, 0.5);
       box.on("pointerover", () => box.setFillStyle(0x334155));
-      box.on("pointerout", () => box.setFillStyle(0x1e293b));
+      box.on("pointerout", () => {
+        if (!isAnswered) box.setFillStyle(0x1e293b);
+      });
       box.on("pointerdown", () => {
         if (isAnswered) return;
         isAnswered = true;
@@ -915,11 +922,8 @@ class OfficeScene extends Phaser.Scene {
           box.setStrokeStyle(3, 0xef4444);
         }
 
-        const children = this.quizContainer.list;
-        children.forEach((node) => {
-          if (node.input && node.disableInteractive) {
-            node.disableInteractive();
-          }
+        optionBoxes.forEach((optionBox) => {
+          optionBox.disableInteractive();
         });
 
         const correctY = GAME_HEIGHT / 2 - 120 + question.correct * 82;
@@ -950,16 +954,7 @@ class OfficeScene extends Phaser.Scene {
           fontSize: "14px",
           color: "#94a3b8"
         }).setOrigin(0.5);
-        const closeButton = this.add.rectangle(GAME_WIDTH / 2 + 516, GAME_HEIGHT / 2 - 252, 42, 42, 0x7f1d1d)
-          .setStrokeStyle(3, 0xfca5a5)
-          .setInteractive({ useHandCursor: true });
-        const closeText = this.add.text(GAME_WIDTH / 2 + 516, GAME_HEIGHT / 2 - 252, "X", {
-          fontSize: "22px",
-          color: "#fee2e2",
-          fontStyle: "bold"
-        }).setOrigin(0.5);
-        closeButton.on("pointerdown", () => this.closeQuiz());
-        this.quizContainer.add([feedback, closingHint, closeButton, closeText]);
+        this.quizContainer.add([feedback, closingHint]);
         this.quizAutoCloseTimer = this.time.delayedCall(1000, () => {
           this.quizAutoCloseTimer = null;
           this.closeQuiz();
@@ -968,7 +963,7 @@ class OfficeScene extends Phaser.Scene {
       this.quizContainer.add([box, txt]);
     });
 
-    const closeHint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 246, "Choose an option to answer.", {
+    const closeHint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 246, "Choose an option to answer, or press X to close.", {
       fontSize: "14px",
       color: "#94a3b8"
     }).setOrigin(0.5);
@@ -987,10 +982,19 @@ class OfficeScene extends Phaser.Scene {
     this.quizContainer.setVisible(true);
   }
 
-  closeQuiz() {
+  closeQuiz(abandonUnanswered = false) {
     if (this.quizAutoCloseTimer) {
       this.quizAutoCloseTimer.remove(false);
       this.quizAutoCloseTimer = null;
+    }
+    if (abandonUnanswered && this.currentQuiz && !this.quizAnswered) {
+      const table = this.tableState.get(this.currentQuiz.tableId);
+      if (table) {
+        table.quizLocked = false;
+        table.status = "warning";
+        table.statusUntil = Number.POSITIVE_INFINITY;
+        this.paintTable(table.id);
+      }
     }
     this.currentQuiz = null;
     this.quizAnswered = false;
@@ -1020,12 +1024,10 @@ class OfficeScene extends Phaser.Scene {
       table.exclamation.destroy();
       table.exclamation = null;
     }
-    this.score += 10;
-    this.ev = Phaser.Math.Clamp(this.ev + 2, 0, 100);
     this.paintTable(tableId);
   }
 
-  applyWrongAnswer(tableId, timeoutFail) {
+  applyWrongAnswer(tableId) {
     const table = this.tableState.get(tableId);
     table.quizLocked = false;
     table.status = "cooldown";
@@ -1034,9 +1036,6 @@ class OfficeScene extends Phaser.Scene {
       table.exclamation.destroy();
       table.exclamation = null;
     }
-    this.score -= 5;
-    if (timeoutFail) this.score -= 7;
-    this.ev = Phaser.Math.Clamp(this.ev - 4.5, 0, 100);
     this.paintTable(tableId);
   }
 
@@ -1084,10 +1083,19 @@ class OfficeScene extends Phaser.Scene {
     };
   }
 
-  getClosestTable(radius) {
+  getClosestTable() {
     let closest = null;
-    let bestDist = radius;
+    let bestDist = Number.POSITIVE_INFINITY;
     TABLES.forEach((table) => {
+      const halfW = TABLE_W / 2 + TABLE_INTERACT_PAD_X;
+      const halfH = TABLE_H / 2 + TABLE_INTERACT_PAD_Y;
+      const insideInteractionBox = (
+        this.player.x >= table.x - halfW &&
+        this.player.x <= table.x + halfW &&
+        this.player.y >= table.y - halfH &&
+        this.player.y <= table.y + halfH
+      );
+      if (!insideInteractionBox) return;
       const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, table.x, table.y);
       if (d < bestDist) {
         bestDist = d;
@@ -1213,10 +1221,8 @@ class OfficeScene extends Phaser.Scene {
     const warnings = Array.from(this.tableState.values()).filter((t) => t.status === "warning").length;
     const cooldown = Array.from(this.tableState.values()).filter((t) => t.status === "cooldown").length;
     const issuePenalty = Phaser.Math.Clamp(1 - warnings * 0.17 - cooldown * 0.27, 0.22, 1);
-    const healthyBoost = warnings === 0 && cooldown === 0 ? 1.06 : 1;
-    const performanceFactor = Phaser.Math.Clamp(normalized * issuePenalty * healthyBoost, 0.22, 1.1);
-    /* EV grows at PV's planned pace × desk/risk effectiveness — no hidden EV inflation. */
-    this.ev += dt * (this.plannedRatePerSec * performanceFactor);
+    const performanceFactor = Phaser.Math.Clamp(normalized * issuePenalty, 0.22, 1);
+    this.ev += dt * (this.plannedRatePerSec * EV_RATE_MULTIPLIER * performanceFactor);
     this.ev = Phaser.Math.Clamp(this.ev, 0, 100);
     this.pv = Phaser.Math.Clamp(this.pv, 0, 100);
 
@@ -1289,7 +1295,6 @@ class OfficeScene extends Phaser.Scene {
     this.remainingMs = this.gameDurationMs;
     this.ev = 0;
     this.pv = 0;
-    this.score = 0;
     this.alertTimer = 0;
     this.currentQuiz = null;
     this.lastQuestionByTable = {};
@@ -1350,12 +1355,6 @@ class OfficeScene extends Phaser.Scene {
       `EV: ${this.ev.toFixed(1)} | PV: ${this.pv.toFixed(1)}`,
       { fontSize: "28px", align: "center", color: "#e2e8f0" }
     ).setOrigin(0.5);
-    const scoreLine = this.add.text(
-      GAME_WIDTH / 2,
-      GAME_HEIGHT / 2 + 68,
-      `Score: ${this.score}`,
-      { fontSize: "20px", align: "center", color: "#94a3b8" }
-    ).setOrigin(0.5);
     const restartButton = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 142, 230, 54, 0x16a34a)
       .setStrokeStyle(3, 0x86efac)
       .setInteractive({ useHandCursor: true });
@@ -1368,7 +1367,7 @@ class OfficeScene extends Phaser.Scene {
     restartButton.on("pointerover", () => restartButton.setFillStyle(0x15803d));
     restartButton.on("pointerout", () => restartButton.setFillStyle(0x16a34a));
     restartButton.on("pointerdown", () => this.restartGame());
-    this.endContainer.add([bg, titleText, messageText, statsText, scoreLine, restartButton, restartText]);
+    this.endContainer.add([bg, titleText, messageText, statsText, restartButton, restartText]);
     this.endContainer.setVisible(true);
   }
 

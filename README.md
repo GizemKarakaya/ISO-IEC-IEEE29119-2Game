@@ -10,10 +10,10 @@ EV/PV dengesini korumaya çalışır.
 1. Açılışta **başlangıç paneli** (zorluk seçimi + **`PLAY`**).
 2. **`PLAY`**, **`ENTER`** veya **`SPACE`** ile run başlar; süre ve periyodik **`!`** uyarıları devreye girer.
 3. Uyarılı masanın yanına gidip **`E`** ile quiz açılır; doğru cevap masayı normale alır, yanlış cevap **cooldown** başlatır.
-4. Şık seçildikten sonra kısa geri bildirim gösterilir; panel yaklaşık **1 saniye** sonra kapanır (veya cevap sonrası **`WASD`** ile hemen kapatılabilir).
-5. Süre bitince **sonuç paneli** (`EV`, `PV`, **Score**).
+4. Quiz paneli sağ üstteki **`X`** ile cevap vermeden kapatılabilir. Şık seçildikten sonra kısa geri bildirim gösterilir; panel yaklaşık **1 saniye** sonra kapanır (veya cevap sonrası **`WASD`** ile hemen kapatılabilir).
+5. Süre bitince **sonuç paneli** (`EV`, `PV`).
 
-Oyundayken **`ESC`** → **duraklatma menüsü** (`RESUME` / `RESTART`). Henüz oyun başlamadıysa **`ESC`** başlangıç panelini göster/gizle. Yardım paneli açıkken **`ESC`** işlem yapmaz; yardım için **`H`** kullanılır.
+Oyundayken **`ESC`** → **duraklatma menüsü** (`RESUME` / `RESTART`). Henüz oyun başlamadıysa **`ESC`** giriş ekranında işlem yapmaz. Yardım paneli açıkken **`ESC`** işlem yapmaz; yardım için **`H`** kullanılır.
 
 ## Proje Yapısı
 
@@ -53,17 +53,16 @@ Oyun açıldığında başlangıç paneli görünür; süre ve olaylar **`PLAY`*
 - `W A S D`: karakter hareketi
 - `E`: yakındaki warning (`!`) masasıyla etkileşim (quiz)
 - `H`: yardım / “Quick Demo” panelini **aç-kapat**
-- `ESC`: oyundayken **duraklatma menüsü**; oyun başlamadan önce başlangıç panelini **göster/gizle**. Yardım açıkken `ESC` yardımı kapatmaz — yardımı **`H`** ile kapat.
+- `ESC`: oyundayken **duraklatma menüsü**; oyun başlamadan önce giriş ekranında işlem yapmaz. Yardım açıkken `ESC` yardımı kapatmaz — yardımı **`H`** ile kapat.
 - `ENTER` / `SPACE`: run başlatır (başlangıç panelindeyken)
 - `1` / `2` / `3`: **Easy** / **Medium** / **Hard** (başlangıç ekranından; zorluk değişince oyun sıfırlanır)
 - Quiz’de cevap verdikten sonra: panel otomatik kapanmadan önce **`WASD`** ile quiz’i hemen kapatabilirsin
 - `EXIT` (sağ üst): oyunu sıfırdan resetleyip başlangıç ekranına döner
 
-## Skor ve Durum Kuralları
+## EV ve Durum Kuralları
 
-- Doğru cevap: **`+10`** skor; ayrıca **EV +2** (tavan 100)
-- Yanlış cevap: **`-5`** skor; ayrıca **EV −4.5**
-- Tasarımda “uyarıyı kaçırma” için ek **−7** skor (`timeoutFail`) düşünülmüş; süre dolunca uyarıyı otomatik kaybetme davranışı şu an oyunda bağlı değil
+- Doğru cevap: uyarıyı temizler; EV'ye anlık ekleme yapmaz
+- Yanlış cevap: masayı cooldown'a alır; EV'den anlık düşüş yapmaz
 
 Masa durumları:
 
@@ -76,14 +75,14 @@ Masa durumları:
 Kaynak sabitler: `src/game.js` içinde `GAME_DURATION_MS` ve `updateProgress()` / `finishGame()`.
 
 - Oyun süresi: **`90` saniye** — `PV` süre boyunca doğrusal büyür; süre sonunda **`100`** tavanına sıkıştırılır.
-- **`EV`**, aynı plan hızına göre masa verimi ve uyarı/cooldown çarpanlarıyla büyür; quiz doğru/yanlışları ek **EV** düzeltmesi yapar (yukarıdaki +2 / −4.5).
+- **`EV`**, `PV` hızının yaklaşık **%25** üstünde, masa verimi ve uyarı/cooldown çarpanlarıyla büyür; quiz doğru/yanlışları anlık **EV** düzeltmesi yapmaz.
 
 Bu nedenle:
 
 - uyarılar ve cooldown’lar birikirse **`EV < PV`** olma ihtimali artar
 - iyi yönetimde HUD’daki farka göre **`EV ≈ PV`** veya **`EV > PV`**
 
-Süre dolunca sonuç panelinde **`EV`**, **`PV`** ve **`Score`** gösterilir:
+Süre dolunca sonuç panelinde **`EV`** ve **`PV`** gösterilir:
 
 - **`EV − PV ≥ −5`** ise **MISSION COMPLETE**
 - daha geride ise **PROJECT BEHIND PLAN**
