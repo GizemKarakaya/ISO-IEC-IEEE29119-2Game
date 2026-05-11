@@ -1276,11 +1276,11 @@ class OfficeScene extends Phaser.Scene {
     }
     const diff = this.ev - this.pv;
     const passed = diff >= -5;
-    const title = passed ? "MISSION COMPLETE" : "PROJECT BEHIND PLAN";
+    const title = passed ? "YOU DID IT!" : "SO CLOSE!";
     const color = passed ? "#86efac" : "#fca5a5";
     const message = passed
-      ? "Monitoring and control were managed well."
-      : "EV is behind PV. Faster intervention is needed.";
+      ? "Great work! The test office stayed happy and on track."
+      : "Almost there! A few quicker fixes will bring the plan back.";
     this.hasGameStarted = false;
     this.showEndPanel(title, message, color);
   }
@@ -1351,9 +1351,9 @@ class OfficeScene extends Phaser.Scene {
     }).setOrigin(0.5);
     const statsText = this.add.text(
       GAME_WIDTH / 2,
-      GAME_HEIGHT / 2 + 32,
-      `EV: ${this.ev.toFixed(1)} | PV: ${this.pv.toFixed(1)}`,
-      { fontSize: "28px", align: "center", color: "#e2e8f0" }
+      GAME_HEIGHT / 2 + 38,
+      `Earned Value: ${this.ev.toFixed(1)}\nPlanned Value: ${this.pv.toFixed(1)}`,
+      { fontSize: "22px", align: "center", color: "#e2e8f0", lineSpacing: 8 }
     ).setOrigin(0.5);
     const restartButton = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 142, 230, 54, 0x16a34a)
       .setStrokeStyle(3, 0x86efac)

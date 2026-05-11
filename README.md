@@ -82,10 +82,10 @@ Bu nedenle:
 - uyarılar ve cooldown’lar birikirse **`EV < PV`** olma ihtimali artar
 - iyi yönetimde HUD’daki farka göre **`EV ≈ PV`** veya **`EV > PV`**
 
-Süre dolunca sonuç panelinde **`EV`** ve **`PV`** gösterilir:
+Süre dolunca sonuç panelinde **`Earned Value`** ve **`Planned Value`** gösterilir:
 
-- **`EV − PV ≥ −5`** ise **MISSION COMPLETE**
-- daha geride ise **PROJECT BEHIND PLAN**
+- **`EV − PV ≥ −5`** ise **YOU DID IT!**
+- daha geride ise **SO CLOSE!**
 
 ## Soru Sistemi
 
