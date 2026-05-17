@@ -10,7 +10,7 @@ EV/PV dengesini korumaya çalışır.
 1. Açılışta **başlangıç paneli** (zorluk seçimi + **`PLAY`**).
 2. **`PLAY`**, **`ENTER`** veya **`SPACE`** ile run başlar; süre ve periyodik **`!`** uyarıları devreye girer.
 3. Uyarılı masanın yanına gidip **`E`** ile quiz açılır; doğru cevap masayı normale alır, yanlış cevap **cooldown** başlatır.
-4. Quiz paneli sağ üstteki **`X`** ile cevap vermeden kapatılabilir. Şık seçildikten sonra kısa geri bildirim gösterilir; panel yaklaşık **1 saniye** sonra kapanır (veya cevap sonrası **`WASD`** ile hemen kapatılabilir).
+4. Quiz paneli sağ üstteki **`X`** veya yeniden **`E`** ile cevap vermeden kapatılabilir. Şıklar **`W` / `S`** ile gezilir, **`SPACE`** ile seçilir. Şık seçildikten sonra kısa geri bildirim gösterilir; panel yaklaşık **1 saniye** sonra kapanır.
 5. Süre bitince **sonuç paneli** (`EV`, `PV`).
 
 Oyundayken **`ESC`** → **duraklatma menüsü** (`RESUME` / `RESTART`). Henüz oyun başlamadıysa **`ESC`** giriş ekranında işlem yapmaz. Yardım paneli açıkken **`ESC`** işlem yapmaz; yardım için **`H`** kullanılır.
@@ -55,7 +55,7 @@ Oyun açıldığında başlangıç paneli görünür; süre ve olaylar **`PLAY`*
 - `H`: yardım / “Quick Demo” panelini **aç-kapat**
 - `ESC`: oyundayken **duraklatma menüsü**; oyun başlamadan önce giriş ekranında işlem yapmaz. Yardım açıkken `ESC` yardımı kapatmaz — yardımı **`H`** ile kapat.
 - `ENTER` / `SPACE`: run başlatır (başlangıç panelindeyken)
-- `1` / `2` / `3`: **Easy** / **Medium** / **Hard** (başlangıç ekranından; zorluk değişince oyun sıfırlanır)
+- Zorluk seçimi: başlangıç ekranındaki **Easy** / **Medium** / **Hard** butonları
 - Quiz’de cevap verdikten sonra: panel otomatik kapanmadan önce **`WASD`** ile quiz’i hemen kapatabilirsin
 - `EXIT` (sağ üst): oyunu sıfırdan resetleyip başlangıç ekranına döner
 
@@ -126,7 +126,7 @@ Bu depoda aşağıdaki kontroller çalıştırılabilir:
 2. Zorluk seç, **`PLAY`** veya **`ENTER`** ile başlat.
 3. Bir `!` bekle; masaya yaklaşıp **`E`** ile quiz aç.
 4. Bir doğru, bir yanlış dene; renkleri ve cooldown’u gözle.
-5. `1` / `2` / `3` ile zorluk değiştir (oyun sıfırlanır); soru seti ve cooldown farkını kontrol et.
+5. Başlangıç ekranındaki zorluk butonlarıyla zorluk değiştir; soru seti ve cooldown farkını kontrol et.
 6. HUD’da EV/PV metninin değiştiğini izle.
 7. Süre bitince sonuç panelini doğrula.
 

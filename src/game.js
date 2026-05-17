@@ -29,18 +29,18 @@ const TABLE_INTERACT_PAD_X = 64;
 const TABLE_INTERACT_PAD_Y = 38;
 const EV_RATE_MULTIPLIER = 1.25;
 const LAYERS = [
-  { title: "Organizational Layer", y: 98, h: 134, wall: 0x2f4a3f, floor: 0x8b6f47, floorAlt: 0x7b623f, trim: 0x38bdf8 },
-  { title: "Test Management Layer", y: 292, h: 144, wall: 0x4a405d, floor: 0x9a7650, floorAlt: 0x856645, trim: 0xa78bfa },
-  { title: "Dynamic Test Processes Layer", y: 504, h: 156, wall: 0x3f563a, floor: 0x94734e, floorAlt: 0x806443, trim: 0x22c55e }
+  { title: "Organizational Layer", y: 98, h: 134, wall: 0x2f4a3f, floor: 0x8b6f47, floorAlt: 0x7b623f, trim: 0x22d3ee },
+  { title: "Test Management Layer", y: 292, h: 144, wall: 0x4a405d, floor: 0x9a7650, floorAlt: 0x856645, trim: 0xc084fc },
+  { title: "Dynamic Test Processes Layer", y: 504, h: 156, wall: 0x3f563a, floor: 0x94734e, floorAlt: 0x806443, trim: 0x4ade80 }
 ];
 
 const TABLES = [
   { id: "OT1", label: "OT1", fullName: "Develop Organizational Test Specification", layer: "organizational", x: 270, y: 188, baseRate: 1.0 },
   { id: "OT2", label: "OT2", fullName: "Monitor and Control Organizational Test Specification", layer: "organizational", x: 590, y: 188, baseRate: 1.0 },
   { id: "OT3", label: "OT3", fullName: "Update Organizational Test Specification", layer: "organizational", x: 910, y: 188, baseRate: 1.0 },
-  { id: "TMP1", label: "TMP1", fullName: "Test Strategy and Planning", layer: "management", x: 210, y: 364, baseRate: 1.0 },
-  { id: "TMP2", label: "TMP2", fullName: "Test Monitoring and Control", layer: "management", x: 500, y: 364, baseRate: 1.1 },
-  { id: "TMP3", label: "TMP3", fullName: "Test Completion", layer: "management", x: 790, y: 364, baseRate: 1.0 },
+  { id: "TMP1", label: "TMP1", fullName: "Test Strategy and Planning", layer: "management", x: 270, y: 364, baseRate: 1.0 },
+  { id: "TMP2", label: "TMP2", fullName: "Test Monitoring and Control", layer: "management", x: 590, y: 364, baseRate: 1.1 },
+  { id: "TMP3", label: "TMP3", fullName: "Test Completion", layer: "management", x: 910, y: 364, baseRate: 1.0 },
   { id: "DP1", label: "DP1", fullName: "Test Design and Implementation", layer: "dynamic", x: 180, y: 590, baseRate: 1.0 },
   { id: "DP2", label: "DP2", fullName: "Test Environment and Data Management", layer: "dynamic", x: 430, y: 590, baseRate: 1.0 },
   { id: "DP3", label: "DP3", fullName: "Test Execution", layer: "dynamic", x: 680, y: 590, baseRate: 1.0 },
@@ -113,6 +113,10 @@ class OfficeScene extends Phaser.Scene {
     this.walkFrame = 0;
     this.quizAnswered = false;
     this.quizAutoCloseTimer = null;
+    this.quizOptionItems = [];
+    this.quizSelectedIndex = 0;
+    this.quizSelectCallback = null;
+    this.quizHintText = null;
   }
 
   preload() {
@@ -134,18 +138,13 @@ class OfficeScene extends Phaser.Scene {
     this.createPlayer();
     this.createTutorial();
     this.createStartOverlay();
-    this.input.keyboard.on("keydown-E", () => this.tryInteract());
+    this.input.keyboard.on("keydown-E", () => this.handleInteractKey());
     this.input.keyboard.on("keydown-H", () => this.toggleTutorial());
-    this.input.keyboard.on("keydown-ONE", () => this.setDifficulty("easy"));
-    this.input.keyboard.on("keydown-TWO", () => this.setDifficulty("medium"));
-    this.input.keyboard.on("keydown-THREE", () => this.setDifficulty("hard"));
     this.input.keyboard.on("keydown-ENTER", () => this.startGame());
-    this.input.keyboard.on("keydown-SPACE", () => this.startGame());
+    this.input.keyboard.on("keydown-SPACE", () => this.handleSpaceKey());
     this.input.keyboard.on("keydown-ESC", () => this.handleEscAction());
-    this.input.keyboard.on("keydown-W", () => this.closeAnsweredQuiz());
-    this.input.keyboard.on("keydown-A", () => this.closeAnsweredQuiz());
-    this.input.keyboard.on("keydown-S", () => this.closeAnsweredQuiz());
-    this.input.keyboard.on("keydown-D", () => this.closeAnsweredQuiz());
+    this.input.keyboard.on("keydown-W", () => this.moveQuizSelection(-1));
+    this.input.keyboard.on("keydown-S", () => this.moveQuizSelection(1));
   }
 
   drawLayers() {
@@ -259,9 +258,9 @@ class OfficeScene extends Phaser.Scene {
     }
 
     LAYERS.forEach((layer) => {
-      floor.fillStyle(layer.trim, 0.08);
+      floor.fillStyle(layer.trim, 0.12);
       floor.fillRect(OFFICE.x, layer.y - 12, OFFICE.width, layer.h + 12);
-      floor.fillStyle(layer.trim, 0.18);
+      floor.fillStyle(layer.trim, 0.26);
       floor.fillRect(OFFICE.x, layer.y - 3, OFFICE.width, 3);
       floor.fillRect(OFFICE.x, layer.y + layer.h - 3, OFFICE.width, 3);
     });
@@ -468,8 +467,8 @@ class OfficeScene extends Phaser.Scene {
         "1) Move around the office with WASD.",
         "2) If you see ! on a desk, that process is slowing down.",
         "3) Walk to the desk and press E to open the question.",
-        "4) Correct answer: the process returns to normal and EV recovers.",
-        "5) Wrong or late answer: the desk enters cooldown and linked flows slow down.",
+        "4) In a question, use W/S to choose, Space to answer, or E to close.",
+        "5) Correct answers clear warnings; wrong answers put the desk in cooldown.",
         "",
         "Goal: keep EV from falling far behind PV."
       ].join("\n"),
@@ -729,27 +728,37 @@ class OfficeScene extends Phaser.Scene {
     const speed = 0.22 * delta;
     const oldX = this.player.x;
     const oldY = this.player.y;
-    let moving = false;
+    let inputX = 0;
+    let inputY = 0;
     if (this.cursors.A.isDown) {
-      this.player.x -= speed;
+      inputX -= 1;
       this.player.setFlipX(true);
-      moving = true;
     }
     if (this.cursors.D.isDown) {
-      this.player.x += speed;
+      inputX += 1;
       this.player.setFlipX(false);
-      moving = true;
     }
     if (this.cursors.W.isDown) {
-      this.player.y -= speed;
-      moving = true;
+      inputY -= 1;
     }
     if (this.cursors.S.isDown) {
-      this.player.y += speed;
-      moving = true;
+      inputY += 1;
     }
 
+    const moving = inputX !== 0 || inputY !== 0;
     if (moving) {
+      const length = Math.hypot(inputX, inputY) || 1;
+      const moveX = (inputX / length) * speed;
+      const moveY = (inputY / length) * speed;
+      this.player.x = Phaser.Math.Clamp(this.player.x + moveX, OFFICE.x + 18, OFFICE.x + OFFICE.width - 18);
+      if (this.isPlayerBlockedByTable()) {
+        this.player.x = oldX;
+      }
+      this.player.y = Phaser.Math.Clamp(this.player.y + moveY, OFFICE.y + 18, OFFICE.y + OFFICE.height - 18);
+      if (this.isPlayerBlockedByTable()) {
+        this.player.y = oldY;
+      }
+
       this.walkFrameMs += delta;
       if (this.walkFrameMs > 150) {
         this.walkFrame = 1 - this.walkFrame;
@@ -759,13 +768,6 @@ class OfficeScene extends Phaser.Scene {
     } else {
       this.walkFrameMs = 0;
       this.player.setTexture("player-idle");
-    }
-
-    this.player.x = Phaser.Math.Clamp(this.player.x, OFFICE.x + 18, OFFICE.x + OFFICE.width - 18);
-    this.player.y = Phaser.Math.Clamp(this.player.y, OFFICE.y + 18, OFFICE.y + OFFICE.height - 18);
-    if (this.isPlayerBlockedByTable()) {
-      this.player.x = oldX;
-      this.player.y = oldY;
     }
   }
 
@@ -845,6 +847,22 @@ class OfficeScene extends Phaser.Scene {
     }
   }
 
+  handleInteractKey() {
+    if (this.currentQuiz) {
+      this.closeQuiz(!this.quizAnswered);
+      return;
+    }
+    this.tryInteract();
+  }
+
+  handleSpaceKey() {
+    if (this.currentQuiz) {
+      this.selectQuizOption(this.quizSelectedIndex);
+      return;
+    }
+    this.startGame();
+  }
+
   openQuiz(tableId) {
     const bankKey = this.getQuestionBankKey(tableId);
     const bank = this.resolveQuestionBank(bankKey);
@@ -870,6 +888,9 @@ class OfficeScene extends Phaser.Scene {
 
   renderQuiz(question, onSelect) {
     this.quizContainer.removeAll(true);
+    this.quizOptionItems = [];
+    this.quizSelectedIndex = 0;
+    this.quizSelectCallback = onSelect;
     const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 1120, 560, 0x020617, 0.95)
       .setStrokeStyle(3, 0x60a5fa);
     const qText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 225, this.wrap(question.q, 82), {
@@ -890,14 +911,11 @@ class OfficeScene extends Phaser.Scene {
     closeButton.on("pointerdown", () => this.closeQuiz(true));
     this.quizContainer.add([bg, qText, closeButton, closeText]);
 
-    let isAnswered = false;
-    const optionBoxes = [];
     question.options.forEach((option, idx) => {
       const y = GAME_HEIGHT / 2 - 120 + idx * 82;
       const box = this.add.rectangle(GAME_WIDTH / 2, y, 1000, 64, 0x1e293b)
         .setStrokeStyle(2, 0x64748b)
         .setInteractive({ useHandCursor: true });
-      optionBoxes.push(box);
       const optionLabel = String.fromCharCode(65 + idx);
       const txt = this.add.text(GAME_WIDTH / 2 - 476, y, `${optionLabel}. ${option}`, {
         fontSize: "16px",
@@ -906,67 +924,24 @@ class OfficeScene extends Phaser.Scene {
         wordWrap: { width: 920, useAdvancedWrap: true },
         lineSpacing: 1
       }).setOrigin(0, 0.5);
-      box.on("pointerover", () => box.setFillStyle(0x334155));
+      this.quizOptionItems.push({ box, txt, index: idx });
+      box.on("pointerover", () => {
+        if (this.quizAnswered) return;
+        this.quizSelectedIndex = idx;
+        this.refreshQuizSelection();
+      });
       box.on("pointerout", () => {
-        if (!isAnswered) box.setFillStyle(0x1e293b);
+        if (!this.quizAnswered) this.refreshQuizSelection();
       });
-      box.on("pointerdown", () => {
-        if (isAnswered) return;
-        isAnswered = true;
-        const isCorrect = idx === question.correct;
-        if (isCorrect) {
-          box.setFillStyle(0x166534);
-          box.setStrokeStyle(3, 0x22c55e);
-        } else {
-          box.setFillStyle(0x7f1d1d);
-          box.setStrokeStyle(3, 0xef4444);
-        }
-
-        optionBoxes.forEach((optionBox) => {
-          optionBox.disableInteractive();
-        });
-
-        const correctY = GAME_HEIGHT / 2 - 120 + question.correct * 82;
-        const correctMarker = this.add.text(GAME_WIDTH / 2 + 486, correctY, "OK", {
-          fontSize: "18px",
-          color: "#22c55e",
-          fontStyle: "bold"
-        }).setOrigin(0.5);
-        this.quizContainer.add(correctMarker);
-
-        onSelect(idx);
-        this.quizAnswered = true;
-        if (this.quizAutoCloseTimer) {
-          this.quizAutoCloseTimer.remove(false);
-          this.quizAutoCloseTimer = null;
-        }
-        const feedback = this.add.text(
-          GAME_WIDTH / 2,
-          GAME_HEIGHT / 2 + 222,
-          isCorrect ? "Correct! The process returned to normal." : "Wrong answer! The desk entered cooldown.",
-          {
-            fontSize: "20px",
-            color: isCorrect ? "#86efac" : "#fca5a5",
-            fontStyle: "bold"
-          }
-        ).setOrigin(0.5);
-        const closingHint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 252, "Closing in 1 second…", {
-          fontSize: "14px",
-          color: "#94a3b8"
-        }).setOrigin(0.5);
-        this.quizContainer.add([feedback, closingHint]);
-        this.quizAutoCloseTimer = this.time.delayedCall(1000, () => {
-          this.quizAutoCloseTimer = null;
-          this.closeQuiz();
-        });
-      });
+      box.on("pointerdown", () => this.selectQuizOption(idx));
       this.quizContainer.add([box, txt]);
     });
 
-    const closeHint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 246, "Choose an option to answer, or press X to close.", {
+    const closeHint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 246, "Use W/S to choose, Space to answer, or press E/X to close.", {
       fontSize: "14px",
       color: "#94a3b8"
     }).setOrigin(0.5);
+    this.quizHintText = closeHint;
     this.quizContainer.add(closeHint);
 
     if (SHOW_CORRECT_ANSWER_DEBUG) {
@@ -980,6 +955,77 @@ class OfficeScene extends Phaser.Scene {
     }
 
     this.quizContainer.setVisible(true);
+    this.refreshQuizSelection();
+  }
+
+  selectQuizOption(index) {
+    if (!this.currentQuiz || this.quizAnswered || !this.quizOptionItems[index]) return;
+    const question = this.currentQuiz.question;
+    const isCorrect = index === question.correct;
+    const selectedItem = this.quizOptionItems[index];
+    selectedItem.box.setFillStyle(isCorrect ? 0x166534 : 0x7f1d1d);
+    selectedItem.box.setStrokeStyle(3, isCorrect ? 0x22c55e : 0xef4444);
+
+    this.quizOptionItems.forEach(({ box }) => {
+      box.disableInteractive();
+    });
+
+    const correctY = GAME_HEIGHT / 2 - 120 + question.correct * 82;
+    const correctMarker = this.add.text(GAME_WIDTH / 2 + 486, correctY, "OK", {
+      fontSize: "18px",
+      color: "#22c55e",
+      fontStyle: "bold"
+    }).setOrigin(0.5);
+    this.quizContainer.add(correctMarker);
+
+    this.quizAnswered = true;
+    if (this.quizHintText) {
+      this.quizHintText.destroy();
+      this.quizHintText = null;
+    }
+    if (this.quizSelectCallback) {
+      this.quizSelectCallback(index);
+    }
+    if (this.quizAutoCloseTimer) {
+      this.quizAutoCloseTimer.remove(false);
+      this.quizAutoCloseTimer = null;
+    }
+
+    const feedback = this.add.text(
+      GAME_WIDTH / 2,
+      GAME_HEIGHT / 2 + 222,
+      isCorrect ? "Correct! The process returned to normal." : "Wrong answer! The desk entered cooldown.",
+      {
+        fontSize: "20px",
+        color: isCorrect ? "#86efac" : "#fca5a5",
+        fontStyle: "bold"
+      }
+    ).setOrigin(0.5);
+    const closingHint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 252, "Closing in 1 second...", {
+      fontSize: "14px",
+      color: "#94a3b8"
+    }).setOrigin(0.5);
+    this.quizContainer.add([feedback, closingHint]);
+    this.quizAutoCloseTimer = this.time.delayedCall(1000, () => {
+      this.quizAutoCloseTimer = null;
+      this.closeQuiz();
+    });
+  }
+
+  moveQuizSelection(direction) {
+    if (!this.currentQuiz || this.quizAnswered || !this.quizOptionItems.length) return;
+    const count = this.quizOptionItems.length;
+    this.quizSelectedIndex = Phaser.Math.Wrap(this.quizSelectedIndex + direction, 0, count);
+    this.refreshQuizSelection();
+  }
+
+  refreshQuizSelection() {
+    this.quizOptionItems.forEach(({ box, txt, index }) => {
+      const isSelected = index === this.quizSelectedIndex;
+      box.setFillStyle(isSelected ? 0x334155 : 0x1e293b);
+      box.setStrokeStyle(isSelected ? 3 : 2, isSelected ? 0xfbbf24 : 0x64748b);
+      txt.setColor(isSelected ? "#fff7ed" : "#e2e8f0");
+    });
   }
 
   closeQuiz(abandonUnanswered = false) {
@@ -998,6 +1044,10 @@ class OfficeScene extends Phaser.Scene {
     }
     this.currentQuiz = null;
     this.quizAnswered = false;
+    this.quizOptionItems = [];
+    this.quizSelectedIndex = 0;
+    this.quizSelectCallback = null;
+    this.quizHintText = null;
     this.quizContainer.setVisible(false);
     this.quizContainer.removeAll(true);
   }
